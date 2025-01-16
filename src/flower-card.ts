@@ -98,26 +98,54 @@ export default class FlowerCard extends LitElement {
               `;
         }
 
-        const species = this.stateObj.attributes.species;
+        const plantInfo = this.stateObj.attributes.strain + " - " + this.stateObj.attributes.breeder;
         const headerCssClass = this.config.display_type === DisplayType.Compact ? "header-compact" : "header";
         const haCardCssClass = this.config.display_type === DisplayType.Compact ? "" : "card-margin-top";
 
+        // Get entity name from plant entity (e.g., "sour_diesel" from "plant.sour_diesel")
+        const plantName = this.stateObj.entity_id.split('.')[1];
+        
+        // Get growth phase and pot size from respective entities
+        const growthPhaseEntity = this._hass.states[`select.${plantName}_growth_phase`];
+        const potSizeEntity = this._hass.states[`number.${plantName}_pot_size`];
+
+        const growthPhase = growthPhaseEntity ? growthPhaseEntity.state : 'Nicht verfügbar';
+        const potSize = potSizeEntity ? potSizeEntity.state + 'L' : 'Nicht verfügbar';
+
         return html`
             <ha-card class="${haCardCssClass}">
-            <div class="${headerCssClass}" @click="${() =>
-                moreInfo(this, this.stateObj.entity_id)}">
+            <div class="${headerCssClass}">
                 <img src="${this.stateObj.attributes.entity_picture
                 ? this.stateObj.attributes.entity_picture
                 : missingImage
-            }">
-                <span id="name"> ${this.stateObj.attributes.friendly_name
+            }" @click="${() => moreInfo(this, this.stateObj.entity_id)}">
+                <span id="name" @click="${() => moreInfo(this, this.stateObj.entity_id)}"> ${this.stateObj.attributes.friendly_name
             } <ha-icon .icon="mdi:${this.stateObj.state.toLowerCase() == "problem"
                 ? "alert-circle-outline"
                 : ""
             }"></ha-icon>
                 </span>
                 <span id="battery">${renderBattery(this)}</span>
-                <span id="species">${species} </span>
+                <span id="species">${plantInfo}</span>
+                <div id="status-container">
+                    <span @click="${() => moreInfo(this, `select.${plantName}_growth_phase`)}">
+                        <ha-icon icon="mdi:sprout"></ha-icon>${growthPhase}
+                    </span>
+                    <span @click="${() => moreInfo(this, `number.${plantName}_pot_size`)}">
+                        <ha-icon icon="mdi:cup"></ha-icon>${potSize}
+                    </span>
+                </div>
+                <div id="metrics-container">
+                    <span @click="${() => moreInfo(this, `sensor.${plantName}_total_ppfd_mol_integral`)}">
+                        <ha-icon icon="mdi:counter"></ha-icon>${this._hass.states[`sensor.${plantName}_total_ppfd_mol_integral`]?.state || 'Nicht verfügbar'} mol/s⋅m²
+                    </span>
+                    <span @click="${() => moreInfo(this, `sensor.${plantName}_water_consumption`)}">
+                        <ha-icon icon="mdi:water-pump"></ha-icon>${this._hass.states[`sensor.${plantName}_water_consumption`]?.state || 'Nicht verfügbar'} L/d
+                    </span>
+                    <span @click="${() => moreInfo(this, `sensor.${plantName}_fertilizer_consumption`)}">
+                        <ha-icon icon="mdi:chart-line-variant"></ha-icon>${this._hass.states[`sensor.${plantName}_fertilizer_consumption`]?.state || 'Nicht verfügbar'} μS/cm/d
+                    </span>
+                </div>
             </div>
             <div class="divider"></div>
             ${renderAttributes(this)}

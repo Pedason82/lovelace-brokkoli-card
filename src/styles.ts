@@ -30,7 +30,8 @@ export const style = css`
 }
 .header {
   padding-top: 8px;
-  height: 72px;
+  height: 100px;
+  position: relative;
 }
 .header-compact {
   padding-top: 4px;
@@ -42,12 +43,12 @@ export const style = css`
 }
 .header > img {
   border-radius: 50%;
-  width: 88px;
-  height: 88px;
+  width: 100px;
+  height: 100px;
   object-fit: cover;
   margin-left: 16px;
   margin-right: 16px;
-  margin-top: -32px;
+  margin-top: -16px;
   float: left;
   box-shadow: var( --ha-card-box-shadow, 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2) );
 }
@@ -69,6 +70,7 @@ export const style = css`
   margin-top: 16px;
   text-transform: capitalize;
   display: block;
+  margin-left: 132px;
 }
 .header-compact > #name {
   font-weight: bold;
@@ -85,6 +87,34 @@ export const style = css`
   text-transform: capitalize;
   color: #8c96a5;
   display: block;
+  margin-top: 4px;
+  margin-left: 132px;
+}
+.header > #status-container {
+  display: flex;
+  gap: 16px;
+  margin-left: 132px;
+  margin-top: 4px;
+}
+.header > #status-container span {
+  color: #8c96a5;
+  display: flex;
+  align-items: center;
+}
+.header > #metrics-container {
+  position: absolute;
+  top: 28px;
+  right: 16px;
+  text-align: right;
+  color: #8c96a5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.header > #metrics-container ha-icon,
+.header > #status-container ha-icon {
+  margin-right: 4px;
+  --mdc-icon-size: 16px;
 }
 .header-compact > #species {
   text-transform: capitalize;
