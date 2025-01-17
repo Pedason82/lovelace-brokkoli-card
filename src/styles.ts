@@ -11,7 +11,6 @@ export const style = css`
 }
 .attributes.width-100 {
   padding: 2px;
-
 }
 .attribute ha-icon {
   margin-right: 10px;
@@ -213,5 +212,93 @@ export const style = css`
   .header > .unit {
     display: none;
   }
+}
+.table-container {
+  overflow-x: auto;
+  margin: 0 16px;
+  padding: 16px 0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  padding: 0;
+  color: var(--primary-text-color);
+  table-layout: auto;
+}
+th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--divider-color);
+  user-select: none;
+}
+th:hover {
+  background-color: var(--secondary-background-color);
+}
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--divider-color);
+  white-space: nowrap;
+  width: fit-content;
+}
+td[data-column="website"] {
+  width: 1%;
+  white-space: nowrap;
+}
+tr:hover {
+  background-color: var(--secondary-background-color);
+  cursor: pointer;
+}
+.plant-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.plant-name img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+ha-icon {
+  --mdc-icon-size: 18px;
+  margin-left: 4px;
+}
+.card-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--divider-color);
+}
+.card-header .name {
+  font-size: 16px;
+  font-weight: bold;
+}
+td, th {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--divider-color);
+  white-space: nowrap;
+  width: fit-content;
+}
+td[data-column="friendly_name"],
+th[data-column="friendly_name"] {
+  max-width: 200px;
+  width: fit-content;
+}
+td[data-column="strain"],
+th[data-column="strain"],
+td[data-column="breeder"],
+th[data-column="breeder"],
+td[data-column="notes"],
+th[data-column="notes"] {
+  max-width: 150px;
+  width: fit-content;
+}
+td {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 `;
