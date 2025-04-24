@@ -1,11 +1,9 @@
 # Brokkoli Card
 
 **Diese Brokkoli-Card benötigt folgende Plant-Komponente:
-https://github.com/Olen/homeassistant-plant**
+https://github.com/dingausmwald/homeassistant-brokkoli**
 
 Die Karten können über die grafische Benutzeroberfläche eingerichtet werden (erfordert Version 3.0.0 oder höher).
-
-![Brokkoli Card](https://github.com/Olen/lovelace-brokkoli-card/assets/203184/a31ad564-9458-41b4-9c1f-9da13f84f2ae)
 
 ## Inhaltsverzeichnis
 
@@ -189,14 +187,12 @@ show_columns:
   conductivity: false             # Leitfähigkeit
   fertility: false                # Fruchtbarkeit
   humidity: false                 # Luftfeuchtigkeit
+  ph: false                       # pH-Wert
   health: true                    # Gesundheit
   battery: false                  # Batterie
   growth_phase: false             # Wachstumsphase
   pot_size: false                 # Topfgröße
-  sensor_ph: false                # pH-Wert
-  nitrogen: false                 # Stickstoff
-  phosphorus: false               # Phosphor
-  potassium: false                # Kalium
+
   images: false                   # Bilder
   notes: false                    # Notizen
   cycle: false                    # Zyklus
@@ -213,7 +209,7 @@ show_columns:
   * Klicke auf HACS in deinem Home Assistant
   * Klicke auf Frontend
   * Klicke auf die 3 Punkte in der oberen rechten Ecke und wähle "Custom Repositories"
-  * Füge die URL dieses GitHub-Repositories und die Kategorie "Lovelace" hinzu
+  * Füge die URL zu diesem GitHub-Repository (https://github.com/dingausmwald/lovelace-brokkoli-card) und die Kategorie "Lovelace" hinzu
 * Klicke auf "Installieren" in der neuen "Brokkoli Card" Karte in HACS
 * Warte, bis die Installation abgeschlossen ist
 * Du musst Home Assistant nicht neu starten, aber wahrscheinlich musst du das Frontend aktualisieren und/oder "Shift-Reload" verwenden, um den Browser-Cache zu aktualisieren.
@@ -236,7 +232,7 @@ Wiederhole dies für `brokkoli-area-card.js` und `brokkoli-list-card.js`.
 5. Du musst Home Assistant nicht neu starten, aber wahrscheinlich musst du das Frontend aktualisieren und/oder "Shift-Reload" verwenden, um den Browser-Cache zu aktualisieren.
 
 ## Abhängigkeiten
-1. Custom Plant Integration (https://github.com/Olen/homeassistant-plant)
+1. Custom Plant Integration (https://github.com/dingausmwald/homeassistant-brokkoli)
 
 ## Kommunikation zwischen den Karten
 
@@ -248,7 +244,3 @@ Alle drei Karten können miteinander kommunizieren, wenn sie mit passenden Ident
 
 ## Haftungsausschluss
 Diese Karte basiert auf https://github.com/thomasloven/lovelace-brokkoli-card und enthält Änderungen aus verschiedenen Forks. Ab Version 3.0.0 wurde die Karte weitgehend neu geschrieben, wobei nur das Design und Layout der ursprünglichen Karte beibehalten wurde.
-
-<a href="https://www.buymeacoffee.com/olatho" target="_blank">
-<img src="https://user-images.githubusercontent.com/203184/184674974-db7b9e53-8c5a-40a0-bf71-c01311b36b0a.png" style="height: 50px !important;"> 
-</a>
