@@ -211,6 +211,8 @@ show_columns:
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
+### ATM Dashboard Resources for list and area card have to be added manually!! Just add another ressource and copy the existing brokkoli-card resource and change to brokkoli-list-card and *-area-card
+
 ### Via HACS
 * Add this repository as a "Custom repository" with type "Lovelace"
   * Click on HACS in your Home Assistant
