@@ -17,6 +17,8 @@ The cards can be set up using the graphical user interface (requires version 3.0
 
 The main card for individual plants with detailed information and graphics.
 
+![image](https://github.com/user-attachments/assets/ba7094b6-6f68-4d7e-872e-832efedc6039) ![image](https://github.com/user-attachments/assets/cf0fea96-dbf1-4398-889f-dd6f128d820e) ![image](https://github.com/user-attachments/assets/29d8175c-ab82-45f7-8330-de497c108a1d) ![image](https://github.com/user-attachments/assets/8fb61d48-dec5-460e-9ef2-2f019fd4dbdd) ![image](https://github.com/user-attachments/assets/13423871-dd1e-41a2-83de-fa6cb2f8a5c7)
+
 ### YAML Configuration
 
 ```yaml
@@ -92,6 +94,9 @@ history_line_position: left
 
 Displays plants as interactive elements in an area. Plants can be positioned via drag & drop and show colored rings for different sensors.
 
+![image](https://github.com/user-attachments/assets/f8a0572f-ab5b-495d-9ba8-2de1f72727fe)
+
+
 ### YAML Configuration
 
 ```yaml
@@ -142,6 +147,8 @@ The Brokkoli Area Card allows you to:
 ## Brokkoli List Card
 
 Displays a tabular overview of all plants. Enables sorting, filtering, and multiple selection.
+
+![image](https://github.com/user-attachments/assets/4d743a10-e6a1-4f5e-b68b-5fbdb68e8fb9)
 
 ### YAML Configuration
 
