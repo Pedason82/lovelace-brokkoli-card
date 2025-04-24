@@ -5,8 +5,9 @@ const compressionPlugin = require('compression-webpack-plugin');
 module.exports = {
     mode: 'production',
     entry: {
-        'flower-card': path.resolve(__dirname, 'src', 'flower-card.ts'),
-        'flower-list-card': path.resolve(__dirname, 'src', 'flower-list-card.ts')
+        'brokkoli-card': path.resolve(__dirname, 'src', 'brokkoli-card.ts'),
+        'brokkoli-list-card': path.resolve(__dirname, 'src', 'brokkoli-list-card.ts'),
+        'brokkoli-area-card': path.resolve(__dirname, 'src', 'brokkoli-area-card.ts')
     },
     output: {
         filename: '[name].js',

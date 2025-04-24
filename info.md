@@ -1,3 +1,39 @@
+# Brokkoli Card
+
+**This fork of the brokkoli-card depends on this Plant component:
+https://github.com/Olen/homeassistant-plant**
+
+The card can be set up from the GUI (requires version 3.0.0)
+
+![image](https://github.com/Olen/lovelace-brokkoli-card/assets/203184/a31ad564-9458-41b4-9c1f-9da13f84f2ae)
+
+## YAML-config
+You can also select what bars you want to show for each card
+
+```yaml
+type: custom:brokkoli-card
+entity: plant.my_plant
+show_bars:
+- illuminance
+- humidity
+- moisture
+- conductivity
+- temperature
+- dli
+battery_sensor: sensor.demo_battery
+```
+
+* Battery sensor
+
+You can optionally add a battery sensor to be displayed in the card.
+
+![image](https://user-images.githubusercontent.com/203184/190199923-6060efbf-7306-49e5-bbc4-26dc922d3180.png)
+
+The sensor will change color based on the state of the battery:
+* &gt;= 40%: Green
+* 20 - 39%: Orange
+* < 20%: Red
+
 # BREAKING CHANGES COMING UP
 
 >**Warning**

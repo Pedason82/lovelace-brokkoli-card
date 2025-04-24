@@ -1,75 +1,253 @@
-# Flower Card
+# Brokkoli Card
 
-**This fork of the flower-card depends on this Plant component:
+**Diese Brokkoli-Card benötigt folgende Plant-Komponente:
 https://github.com/Olen/homeassistant-plant**
 
-The card can be set up from the GUI (requires version 3.0.0)
+Die Karten können über die grafische Benutzeroberfläche eingerichtet werden (erfordert Version 3.0.0 oder höher).
 
-![image](https://github.com/Olen/lovelace-flower-card/assets/203184/a31ad564-9458-41b4-9c1f-9da13f84f2ae)
+![Brokkoli Card](https://github.com/Olen/lovelace-brokkoli-card/assets/203184/a31ad564-9458-41b4-9c1f-9da13f84f2ae)
 
-## YAML-config
-You can also select what bars you want to show for each card
+## Inhaltsverzeichnis
+
+- [Brokkoli Card](#brokkoli-card) - Hauptkarte für einzelne Pflanzen
+- [Brokkoli Area Card](#brokkoli-area-card) - Karte zur Anzeige von Pflanzen in einem Bereich
+- [Brokkoli List Card](#brokkoli-list-card) - Karte zur tabellarischen Übersicht aller Pflanzen
+- [Installation](#installation)
+- [Abhängigkeiten](#abhängigkeiten)
+
+## Brokkoli Card
+
+Die Hauptkarte für einzelne Pflanzen mit detaillierten Informationen und Grafiken.
+
+### YAML-Konfiguration
 
 ```yaml
-type: custom:flower-card
-entity: plant.my_plant
+type: custom:brokkoli-card
+entity: plant.my_plant            # Pflicht: Die Pflanzen-Entity
+battery_sensor: sensor.demo_battery   # Optional: Batterie-Sensor für die Karte
+
+# Welche Balken angezeigt werden sollen (optional, Standardwerte wenn nicht definiert)
 show_bars:
-- illuminance
-- humidity
-- moisture
-- conductivity
-- temperature
-- dli
-battery_sensor: sensor.demo_battery
+  - moisture
+  - temperature
+  - conductivity
+  - brightness
+  - humidity
+  - dli
+  - fertility
+  - health
+
+# Welche Balken in voller Breite angezeigt werden (optional)
+full_width_bars:
+  - health
+
+# Welche Elemente direkt auf der Karte angezeigt werden (optional, in dieser Reihenfolge)
+# Standardwerte, wenn nicht definiert: header, attributes, options
+show_elements:
+  - header
+  - attributes
+  - options
+  - timeline
+  - consumption
+
+# Welche Elemente im Optionsmenü verfügbar sind (optional)
+# Standardwerte, wenn nicht definiert: attributes, timeline, consumption, history, details
+option_elements:
+  - attributes
+  - timeline
+  - consumption
+  - history
+  - details
+
+# Welche Optionen standardmäßig geöffnet sind (optional)
+default_expanded_options:
+  - timeline
+  - history
+
+# Anzeige-Typ: "full" oder "compact" (optional, Standard: "full")
+display_type: full
+
+# Hören auf Auswahl-Events von anderen Karten (optional)
+listen_to: my_identifier
+
+# Gruppierung für den Verlauf (History) (optional)
+history_groups:
+  - moisture
+  - temperature
+  - conductivity
+
+# Position der Verlaufslinie: "left" oder "right" (optional, Standard: "left")
+history_line_position: left
 ```
-* Battery sensor
 
-You can optionally add a battery sensor to be displayed in the card.
+### Verfügbare Elemente
 
-![image](https://user-images.githubusercontent.com/203184/190199923-6060efbf-7306-49e5-bbc4-26dc922d3180.png)
+* `header` - Kopfbereich mit Pflanzenbild und Grundinformationen
+* `attributes` - Attributbalken (Feuchtigkeit, Temperatur usw.)
+* `options` - Optionsmenü mit Schaltflächen
+* `timeline` - Zeitachsenbereich mit Grafik
+* `consumption` - Verbrauchsbereich
+* `history` - Verlaufsbereich
+* `details` - Detaillierte Pflanzeninformationen
 
-The sensor will change color based on the state of the battery:
-* &gt;= 40%: Green
-* 20 - 39%: Orange
-* < 20%: Red
+## Brokkoli Area Card
 
-## Dependencies
-1. Custom Plant integration (https://github.com/Olen/homeassistant-plant)
+Zeigt Pflanzen als interaktive Elemente in einem Bereich an. Die Pflanzen können per Drag & Drop positioniert werden und zeigen farbige Ringe für verschiedene Sensoren.
+
+### YAML-Konfiguration
+
+```yaml
+type: custom:brokkoli-area-card
+title: Mein Pflanzenbereich     # Optional: Titel der Karte
+
+# Definieren, welche Pflanzen angezeigt werden sollen (mindestens eine dieser Optionen muss angegeben werden)
+area: wohnzimmer                 # Optional: Bereich, aus dem Pflanzen angezeigt werden
+entity: plant.my_plant           # Optional: Einzelne Pflanze zur Anzeige
+entities:                        # Optional: Liste von Pflanzen zur Anzeige
+  - plant.plant1
+  - plant.plant2
+
+# Eindeutige ID für die Karte, wenn sie mit anderen Karten kommunizieren soll
+identifier: mein_bereich         # Optional: Eindeutiger Identifier für diese Karte
+
+# Welche Sensoren als Ringe um die Pflanzen angezeigt werden sollen
+# Standard: health, moisture, temperature
+show_rings:
+  - health
+  - moisture
+  - temperature
+  - brightness
+
+# Welche Sensoren als Labels in der Mitte angezeigt werden sollen (optional)
+show_labels:
+  - moisture
+  - temperature
+
+# Heatmap-Konfiguration (optional)
+heatmap: moisture                 # Sensor für die Heatmap (z.B. moisture, temperature)
+heatmap_color: "#00ff00"          # Benutzerdefinierte Farbe für die Heatmap
+heatmap_secondary_color: "white"  # Sekundäre Farbe für die Heatmap
+heatmap_opacity: 0.8              # Deckkraft für die Heatmap (0.0 - 1.0)
+
+# Ob die Legende angezeigt werden soll (optional, Standard: true)
+legend: true
+```
+
+Die Brokkoli Area Card ermöglicht es:
+- Pflanzen mit Drag & Drop zu positionieren
+- Mehrere Pflanzen gleichzeitig zu bewegen
+- Sensorzustände als farbige Ringe zu visualisieren
+- Eine Heatmap für einen ausgewählten Sensor anzuzeigen
+- Pflanzen zu gruppieren und anzuordnen
+- Beim Klick auf eine Pflanze Details anzuzeigen oder mit anderen Brokkoli-Karten zu interagieren
+
+## Brokkoli List Card
+
+Zeigt eine tabellarische Übersicht aller Pflanzen an. Ermöglicht Sortieren, Filtern und Mehrfachauswahl.
+
+### YAML-Konfiguration
+
+```yaml
+type: custom:brokkoli-list-card
+title: Pflanzenübersicht          # Optional: Titel der Karte
+area: wohnzimmer                  # Optional: Filtert nach Pflanzen in einem bestimmten Bereich
+
+# Eindeutige ID für die Karte, wenn sie mit anderen Karten kommunizieren soll
+identifier: meine_liste           # Optional: Eindeutiger Identifier für diese Karte
+
+# Suchfunktion konfigurieren (optional)
+search:
+  enabled: true                   # Such-Funktion aktivieren/deaktivieren
+  placeholder: Suche nach Pflanzen...  # Platzhaltertext für das Suchfeld
+
+# Mehrfachauswahl konfigurieren (optional)
+multiselect:
+  enabled: true                   # Mehrfachauswahl aktivieren/deaktivieren
+  showbydefault: false            # Mehrfachauswahlmodus standardmäßig aktivieren
+
+# Filterfunktion konfigurieren (optional)
+filter:
+  enabled: true                   # Filter-Funktion aktivieren/deaktivieren
+  showbydefault: false            # Filtermodus standardmäßig aktivieren
+  filters:                        # Vordefinierte Filter (optional)
+    entity_type: ['plant', 'cycle']  # Filtern nach Entity-Typ
+    area: ['wohnzimmer', 'küche']    # Filtern nach Bereichen
+
+# Konfiguration für "Neue Pflanze hinzufügen" (optional)
+add_plant:
+  enabled: true                   # Button zum Hinzufügen einer Pflanze anzeigen
+  position: bottom                # Position des Buttons: "top" oder "bottom"
+
+# Welche Spalten angezeigt werden sollen (true = anzeigen, false = ausblenden)
+show_columns:
+  friendly_name: true             # Pflanzenname
+  state: true                     # Status
+  area: true                      # Bereich
+  moisture: true                  # Feuchtigkeit
+  temperature: true               # Temperatur
+  brightness: false               # Helligkeit
+  conductivity: false             # Leitfähigkeit
+  fertility: false                # Fruchtbarkeit
+  humidity: false                 # Luftfeuchtigkeit
+  health: true                    # Gesundheit
+  battery: false                  # Batterie
+  growth_phase: false             # Wachstumsphase
+  pot_size: false                 # Topfgröße
+  sensor_ph: false                # pH-Wert
+  nitrogen: false                 # Stickstoff
+  phosphorus: false               # Phosphor
+  potassium: false                # Kalium
+  images: false                   # Bilder
+  notes: false                    # Notizen
+  cycle: false                    # Zyklus
+  variant: false                  # Variante
+  # Und viele weitere Optionen...
+```
 
 ## Installation
+
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
-This can be installed manually or through HACS
 ### Via HACS
-* Add this repo as a "Custom repository" with type "Dashboard"
-  * Click HACS in your Home Assistnat
-  * Click Frontend
-  * Click the 3 dots in the top right corner and select "Custom Repositories"
-  * Add the URL to this github repository and type "Dashboard"
-* Click "Install" in the new "Flower Card" card in HACS.
-* Wait for install to complete
-* You should not need to restart Home Assistant, but will probably need to refresh the frontend and/or "shift-reload" to refresh the browser cache.
+* Füge dieses Repository als "Custom repository" mit Typ "Lovelace" hinzu
+  * Klicke auf HACS in deinem Home Assistant
+  * Klicke auf Frontend
+  * Klicke auf die 3 Punkte in der oberen rechten Ecke und wähle "Custom Repositories"
+  * Füge die URL dieses GitHub-Repositories und die Kategorie "Lovelace" hinzu
+* Klicke auf "Installieren" in der neuen "Brokkoli Card" Karte in HACS
+* Warte, bis die Installation abgeschlossen ist
+* Du musst Home Assistant nicht neu starten, aber wahrscheinlich musst du das Frontend aktualisieren und/oder "Shift-Reload" verwenden, um den Browser-Cache zu aktualisieren.
 
-### Manual Installation
-1: Download the file flower-card.js and add it to somewhere in your `<config>/www/` folder in HA 
+### Manuelle Installation
+1. Lade die Dateien `brokkoli-card.js`, `brokkoli-area-card.js` und `brokkoli-list-card.js` herunter und füge sie irgendwo in deinem `<config>/www/` Ordner in HA hinzu
  
-2: Click your profile picture in the bottom left corner -> Turn on Advanced Mode.
+2. Klicke auf dein Profilbild in der unteren linken Ecke -> Aktiviere den erweiterten Modus.
  
-3: Go to Configuration -> Lovelace Dashboards -> Resources -> press the + (lower right corner of screen) and add the following information:
+3. Gehe zu Konfiguration -> Lovelace Dashboards -> Ressourcen -> drücke das + (untere rechte Ecke des Bildschirms) und füge die folgenden Informationen hinzu:
 
 ```yaml
-  Url: /local/<path to>/flower-card.js
+  Url: /local/<Pfad zu>/brokkoli-card.js
   Resource type: JavaScript Module
 ```
-![image](https://user-images.githubusercontent.com/45675902/80322223-ebd41880-8823-11ea-992d-7070d4197f8b.png)
+Wiederhole dies für `brokkoli-area-card.js` und `brokkoli-list-card.js`.
 
-4: Press *Create* afterwards to add the new resource.
+4. Drücke danach auf *Erstellen*, um die neue Ressource hinzuzufügen.
 
-5: You should not need to restart Home Assistant, but will probably need to refresh the frontend and/or "shift-reload" to refresh the browser cache.
+5. Du musst Home Assistant nicht neu starten, aber wahrscheinlich musst du das Frontend aktualisieren und/oder "Shift-Reload" verwenden, um den Browser-Cache zu aktualisieren.
 
+## Abhängigkeiten
+1. Custom Plant Integration (https://github.com/Olen/homeassistant-plant)
 
-### Disclaimer
-I looked into several forks of the original card https://github.com/thomasloven/lovelace-flower-card. Some forks were very interesting and I edited several of those source codes changes into my own new fork. Credits to those original authors. After version 3.0.0 the card was more or less completely rewritten, and only the design and layout of the original card has been kept.
+## Kommunikation zwischen den Karten
+
+Alle drei Karten können miteinander kommunizieren, wenn sie mit passenden Identifiern konfiguriert sind:
+
+1. Setze einen `identifier` in der Brokkoli Area Card oder Brokkoli List Card
+2. Setze `listen_to` in der Brokkoli Card auf den gleichen Wert
+3. Wenn du nun eine Pflanze in der Area oder List Card auswählst, wird die Brokkoli Card automatisch aktualisiert
+
+## Haftungsausschluss
+Diese Karte basiert auf https://github.com/thomasloven/lovelace-brokkoli-card und enthält Änderungen aus verschiedenen Forks. Ab Version 3.0.0 wurde die Karte weitgehend neu geschrieben, wobei nur das Design und Layout der ursprünglichen Karte beibehalten wurde.
 
 <a href="https://www.buymeacoffee.com/olatho" target="_blank">
 <img src="https://user-images.githubusercontent.com/203184/184674974-db7b9e53-8c5a-40a0-bf71-c01311b36b0a.png" style="height: 50px !important;"> 

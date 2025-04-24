@@ -1,6 +1,6 @@
 {
-    "name": "Flower Card",
+    "name": "Brokkoli Card",
     "render_readme": true,
-    "filename": "flower-card.js",
+    "filename": "brokkoli-card.js",
     "homeassistant": "2022.8.0"
 }
