@@ -1,10 +1,6 @@
 {
     "name": "Brokkoli Card",
     "render_readme": true,
-    "filename": "brokkoli-card.js",
-    "homeassistant": "2022.8.0",
-    "additional_files": [
-        "brokkoli-list-card.js",
-        "brokkoli-area-card.js"
-    ]
+    "content_in_root": true,
+    "homeassistant": "2022.8.0"
 }
