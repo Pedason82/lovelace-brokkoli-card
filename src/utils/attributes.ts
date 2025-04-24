@@ -1,13 +1,14 @@
 // import { HomeAssistant } from "custom-card-helpers";
-import { DisplayType, DisplayedAttribute, DisplayedAttributes, Icons, Limits, UOM, UOMT } from "../types/flower-card-types";
+import { DisplayType, DisplayedAttribute, DisplayedAttributes, Icons, Limits, UOM, UOMT } from "../types/brokkoli-card-types";
 import { TemplateResult, html } from "lit";
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import BrokkoliCard from "../brokkoli-card";
 import { default_show_bars } from "./constants";
 import { moreInfo } from "./utils";
-import FlowerCard from "../flower-card";
 
 // export const renderBattery = (config: FlowerCardConfig, hass: HomeAssistant) => {
-export const renderBattery = (card: FlowerCard) => {
+export const renderBattery = (card: BrokkoliCard) => {
     if(!card.config.battery_sensor) return html``;
 
     const battery_sensor = card._hass.states[card.config.battery_sensor];
@@ -33,12 +34,12 @@ export const renderBattery = (card: FlowerCard) => {
 
     return html`
         <div class="battery tooltip" @click="${(e: Event) => { e.stopPropagation(); moreInfo(card, card.config.battery_sensor)}}">
-            <div class="tip" style="text-align:center;">${state}%</div>
+            <div class="tip">${state}%</div>
             <ha-icon .icon="${icon}" style="color: ${color}"></ha-icon>
         </div>
     `;
 }
-export const renderAttributes = (card: FlowerCard): TemplateResult[] => {
+export const renderAttributes = (card: BrokkoliCard): TemplateResult[] => {
     const icons: Icons = {};
     const uom: UOM = {};
     const uomt: UOMT = {};
@@ -48,15 +49,26 @@ export const renderAttributes = (card: FlowerCard): TemplateResult[] => {
     const displayed: DisplayedAttributes = {};
     const monitored = card.config.show_bars || default_show_bars;
 
+    // Prüfe, ob wir mit einer gültigen Konfiguration arbeiten
+    const entityId = card.selectedPlantEntity || card.config?.entity;
+    if (!entityId || !card._hass.states[entityId]) {
+        return [];
+    }
+
+    // Entity ID extrahieren
+    const entityIdName = entityId.split('.')[1];
+
     if (card.plantinfo && card.plantinfo.result) {
         const result = card.plantinfo.result;
         for (const elem of monitored) {
-            if (result[elem] || elem === 'health') {  // Erlaube health auch wenn nicht in result
+            if (result[elem] || (elem === 'health' && result.helpers?.health)) {  // Prüfe, ob health in helpers existiert
                 let max, min, current, icon, sensor, unit_of_measurement;
                 
                 if (elem === 'health') {
-                    // Spezielle Behandlung für Health-Sensor
-                    const healthSensor = card._hass.states[`number.${card.config.entity.split('.')[1]}_health`];
+                    // Verwende Health-Sensor aus der Helper-Struktur statt manuelle Generierung
+                    if (!result.helpers?.health?.entity_id) continue;
+                    
+                    const healthSensor = card._hass.states[result.helpers.health.entity_id];
                     if (!healthSensor) continue;
                     
                     max = 5;
@@ -92,21 +104,24 @@ export const renderAttributes = (card: FlowerCard): TemplateResult[] => {
         }
     }
 
-    return renderAttributeChunks(card, displayed);
+    // Pass monitored array to renderAttributeChunks for correct ordering
+    return renderAttributeChunks(card, displayed, monitored);
 }
 
-export const renderAttribute = (card: FlowerCard, attr: DisplayedAttribute) => {
+export const renderAttribute = (card: BrokkoliCard, attr: DisplayedAttribute) => {
     const { max, min } = attr.limits;
-    const unitTooltip = attr.unit_of_measurement;
+    const unitTooltip = attr.unit_of_measurement && attr.unit_of_measurement !== "null" ? attr.unit_of_measurement : "";
     const icon = attr.icon || "mdi:help-circle-outline";
     const val = attr.current || 0;
     const aval = !isNaN(val);
     const display_val = attr.display_state;
 
+    // Prüfe, ob dieses Attribut in voller Breite angezeigt werden soll
+    const isFullWidth = card.config.full_width_bars?.includes(attr.name) || false;
+    const isCompactMode = card.config.display_type === DisplayType.Compact;
+
     // Spezielle Behandlung für Health-Bar
     if (attr.name === 'health') {
-        const attributeCssClass = `attribute ${card.config.display_type === DisplayType.Compact ? 'width-100' : ''}`;
-
         // Berechne die aktuelle Farbe basierend auf dem Wert (0-5 in 0.5er Schritten)
         const step = Math.floor(val * 2); // 0-10 Schritte
         let activeColor;
@@ -127,8 +142,8 @@ export const renderAttribute = (card: FlowerCard, attr: DisplayedAttribute) => {
             const isActive = aval && val > segmentValue;
             const color = isActive ? activeColor : 'var(--primary-background-color)';
             return html`
-                <span class="" 
-                      style="grid-row: 1; grid-column: ${i + 1}; border-radius: 2px; background-color: ${color};">
+                <span class="health-segment ${isActive ? 'active' : ''}" 
+                      style="grid-column: ${i + 1}; background-color: ${color};">
                 </span>
             `;
         });
@@ -150,22 +165,20 @@ export const renderAttribute = (card: FlowerCard, attr: DisplayedAttribute) => {
         };
 
         return html`
-            <div class="${attributeCssClass}">
+            <div class="attribute ${isCompactMode || isFullWidth ? 'width-100' : ''} ${isFullWidth ? 'full-width' : ''}" data-attribute="health">
                 <ha-icon .icon="${icon}" 
-                         style="cursor: pointer;" 
                          @click="${(e: Event) => {
                              e.stopPropagation();
                              decreaseValue();
                          }}">
                 </ha-icon>
-                <div class="meter green" style="display: grid; grid-template-columns: repeat(10, 1fr); column-gap: 5px; max-width: calc(50% + 10px); margin-right: 5px; position: relative;">
+                <div class="meter green">
                     ${segments}
                     <input type="range" 
                            min="0" 
                            max="5" 
                            step="0.5"
                            .value="${val}"
-                           style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.0001; cursor: pointer; margin: 0; padding: 0;"
                            @input="${(e: Event) => {
                                e.stopPropagation();
                                const target = e.target as HTMLInputElement;
@@ -177,8 +190,8 @@ export const renderAttribute = (card: FlowerCard, attr: DisplayedAttribute) => {
                            }}"
                     >
                 </div>
-                ${card.config.display_type === DisplayType.Compact ? '': html`
-                    <div class="header" style="cursor: pointer; min-width: 24px;" @click="${(e: Event) => {
+                ${isCompactMode && !isFullWidth ? '' : html`
+                    <div class="header" @click="${(e: Event) => {
                         e.stopPropagation();
                         increaseValue();
                     }}">
@@ -191,13 +204,25 @@ export const renderAttribute = (card: FlowerCard, attr: DisplayedAttribute) => {
 
     // Normale Behandlung für andere Attribute
     const pct = 100 * Math.max(0, Math.min(1, (val - min) / (max - min)));
-    const toolTipText = aval ? `${attr.name}: ${val} ${unitTooltip}<br>(${min} ~ ${max} ${unitTooltip})` : card._hass.localize('state.default.unavailable');
-    const label = attr.name === 'dli' ? '<math style="display: inline-grid;" xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mfrac><mrow><mn>mol</mn></mrow><mrow><mn>d</mn><mn>⋅</mn><msup><mn>m</mn><mn>2</mn></msup></mrow></mfrac></mrow></math>' : unitTooltip;
-    const attributeCssClass = `attribute tooltip ${card.config.display_type === DisplayType.Compact ? 'width-100' : ''}`;
-
+    
+    // Angepasster Tooltip-Text für Sensoren mit und ohne Einheit
+    const toolTipText = aval 
+        ? (unitTooltip 
+            ? `${attr.name}: ${val} ${unitTooltip}<br>(${min} ~ ${max} ${unitTooltip})` 
+            : `${attr.name}: ${val}<br>(${min} ~ ${max})`)
+        : card._hass.localize('state.default.unavailable');
+    
+    // Behandle spezielle Fälle für das Label (Einheit)
+    let label = '';
+    if (attr.name === 'dli') {
+        label = '<math style="display: inline-grid;" xmlns="http://www.w3.org/1998/Math/MathML"><mrow><mfrac><mrow><mn>mol</mn></mrow><mrow><mn>d</mn><mn>⋅</mn><msup><mn>m</mn><mn>2</mn></msup></mrow></mfrac></mrow></math>';
+    } else if (unitTooltip) {
+        label = unitTooltip;
+    }
+    
     return html`
-        <div class="${attributeCssClass}" @click="${() => moreInfo(card, attr.sensor)}">
-            <div class="tip" style="text-align:center;">${unsafeHTML(toolTipText)}</div>
+        <div class="attribute tooltip ${isCompactMode || isFullWidth ? 'width-100' : ''} ${isFullWidth ? 'full-width' : ''}" data-attribute="${attr.name}" @click="${() => moreInfo(card, attr.sensor)}">
+            <div class="tip">${unsafeHTML(toolTipText)}</div>
             <ha-icon .icon="${icon}"></ha-icon>
             <div class="meter red">
                 <span class="${
@@ -214,30 +239,95 @@ export const renderAttribute = (card: FlowerCard, attr: DisplayedAttribute) => {
                     aval ? (val > max ? 100 : 0) : "0"
                 }%;"></span>
             </div>
-            ${card.config.display_type === DisplayType.Compact ? '': html`<div class="header"><span class="value">${display_val}</span>&nbsp;<span class='unit'>${attr.name === 'health' ? '' : unsafeHTML(label)}</span></div>`}
+            ${isCompactMode && !isFullWidth ? '' : html`<div class="header"><span class="value">${display_val}</span>&nbsp;${label ? html`<span class='unit'>${unsafeHTML(label)}</span>` : ''}</div>`}
         </div>
     `;
 };
 
-export const getChunkedDisplayed = (displayed: DisplayedAttributes, attributesPerRow: number) => {
-    return Object.values(displayed).reduce((acc, curr, i) => {
-      const index = Math.floor(i / attributesPerRow);
-      if (!acc[index]) {
-        acc[index] = [];
-      }
-      acc[index].push(curr);
-      return acc;
-    }, []);
+export const getChunkedDisplayed = (displayed: DisplayedAttributes, attributesPerRow: number, fullWidthBars: string[] = [], monitored: string[] = []) => {
+    // Create array of all attributes in the correct order from monitored
+    const orderedResult: DisplayedAttribute[][] = [];
+    
+    // Process all attributes in the order of monitored
+    for (const name of monitored) {
+        const attr = displayed[name];
+        if (!attr) continue;
+        
+        // If it's a full width bar, create a chunk with just this item
+        if (fullWidthBars.includes(name)) {
+            orderedResult.push([attr]);
+        } else {
+            // Find or create a non-full-width chunk that has space
+            let lastNormalChunk = orderedResult.length > 0 ? 
+                orderedResult[orderedResult.length - 1] : null;
+                
+            // Check if the last chunk is a normal chunk (not a full-width one) and has space
+            if (lastNormalChunk && lastNormalChunk.length < attributesPerRow && 
+                !fullWidthBars.includes(lastNormalChunk[0].name)) {
+                lastNormalChunk.push(attr);
+            } else {
+                // Create a new chunk with this attribute
+                orderedResult.push([attr]);
+            }
+        }
+    }
+    
+    // Add any remaining attributes that might not be in the monitored array
+    const displayedCopy = { ...displayed };
+    // Remove processed attributes
+    for (const name of monitored) {
+        delete displayedCopy[name];
+    }
+    
+    const remainingAttrs = Object.values(displayedCopy);
+    
+    for (let i = 0; i < remainingAttrs.length; i++) {
+        const attr = remainingAttrs[i];
+        
+        // If it's a full width bar, create a chunk with just this item
+        if (fullWidthBars.includes(attr.name)) {
+            orderedResult.push([attr]);
+        } else {
+            // Find the last non-full-width chunk that has space
+            let lastNormalChunk = null;
+            for (let j = orderedResult.length - 1; j >= 0; j--) {
+                const chunk = orderedResult[j];
+                if (chunk.length < attributesPerRow && !fullWidthBars.includes(chunk[0].name)) {
+                    lastNormalChunk = chunk;
+                    break;
+                }
+            }
+            
+            if (lastNormalChunk && lastNormalChunk.length < attributesPerRow) {
+                lastNormalChunk.push(attr);
+            } else {
+                // Create a new chunk with this attribute
+                orderedResult.push([attr]);
+            }
+        }
+    }
+    
+    return orderedResult;
 }
 
-export const renderAttributeChunks = (card: FlowerCard, displayed: DisplayedAttributes): TemplateResult[] => {
-    const chunkedDisplayed = getChunkedDisplayed(displayed, card.config.display_type === DisplayType.Compact ? 1 : 2);
+export const renderAttributeChunks = (card: BrokkoliCard, displayed: DisplayedAttributes, monitored: string[] = []): TemplateResult[] => {
+    const attributesPerRow = card.config.display_type === DisplayType.Compact ? 1 : 2;
+    const fullWidthBars = card.config.full_width_bars || [];
+    
+    // Verwende die erweiterte getChunkedDisplayed-Funktion mit der full_width_bars Option
+    const chunkedDisplayed = getChunkedDisplayed(displayed, attributesPerRow, fullWidthBars, monitored);
     const attributeCssClass = `attributes ${card.config.display_type === DisplayType.Compact ? 'width-100' : ''}`;
 
     return chunkedDisplayed.map((chunk) => {
-      return html`<div class="${attributeCssClass}">${chunk.map((item: DisplayedAttribute) => {
-        return item ? html`${renderAttribute(card, item)}` : '';
-      })}</div>`;
+        // Prüfe, ob dieser Chunk ein einzelnes Element in voller Breite enthält
+        const hasFullWidthItem = chunk.length === 1 && fullWidthBars.includes(chunk[0].name);
+        
+        // Setze die CSS-Klasse entsprechend
+        const chunkClass = `${attributeCssClass}${hasFullWidthItem ? ' has-full-width-item' : ''}`;
+        
+        return html`<div class="${chunkClass}">${chunk.map((item: DisplayedAttribute) => {
+            return item ? html`${renderAttribute(card, item)}` : '';
+        })}</div>`;
     }).flat();
-  }
+}
 
