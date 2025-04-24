@@ -1442,7 +1442,7 @@ export class BrokkoliArea extends LitElement {
         
         <!-- Legende einfügen -->
         ${this.showLegend ? html`
-          <flower-area-legend
+          <brokkoli-area-legend
             .hass=${this.hass}
             .initialShowRings=${this._getActiveRings()}
             .initialShowLabels=${this._getActiveLabels()}
@@ -1451,7 +1451,7 @@ export class BrokkoliArea extends LitElement {
             .initialHeatmapSecondaryColor=${this._getHeatmapSecondaryColor()}
             .plantInfo=${this._plantInfoCache[Object.keys(this._plantInfoCache)[0]]}
             @settings-changed=${this._handleSettingsChanged}
-          ></flower-area-legend>
+          ></brokkoli-area-legend>
         ` : ''}
       </div>
     `;
