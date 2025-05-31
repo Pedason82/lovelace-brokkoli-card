@@ -1,6 +1,5 @@
 {
     "name": "Brokkoli Card",
     "render_readme": true,
-    "content_in_root": true,
     "homeassistant": "2022.8.0"
 }
