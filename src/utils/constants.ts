@@ -26,7 +26,6 @@ export const default_show_elements = [
 
 export const default_option_elements = [
     "attributes",
-    "timeline",
     "consumption",
     "history",
     "details"
