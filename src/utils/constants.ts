@@ -35,7 +35,6 @@ export const elementOptions = [
     { label: 'Header', value: 'header' },
     { label: 'Attribute Bars', value: 'attributes' },
     { label: 'Options Menu', value: 'options' },
-    { label: 'Timeline', value: 'timeline' },
     { label: 'Consumption', value: 'consumption' },
     { label: 'History', value: 'history' },
     { label: 'Details', value: 'details' }

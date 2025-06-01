@@ -8,8 +8,6 @@ import { renderAttributes, renderBattery } from './utils/attributes';
 import { CARD_EDITOR_NAME, CARD_NAME, default_show_bars, default_show_elements, default_option_elements, missingImage, getGrowthPhaseIcon } from './utils/constants';
 import { moreInfo } from './utils/utils';
 import './components/gallery';
-import './components/timeline';
-import './components/graph';
 import './components/consumption';
 import './components/history';
 
@@ -190,8 +188,7 @@ export default class BrokkoliCard extends LitElement {
                 return this._renderAttributes();
             case 'options':
                 return this._renderOptions();
-            case 'timeline':
-                return this._renderTimeline();
+
             case 'consumption':
                 return this._renderConsumption();
             case 'history':
@@ -397,26 +394,6 @@ export default class BrokkoliCard extends LitElement {
             
             // Daten laden und UI aktualisieren
             this.get_data(this._hass).then(() => {
-                // Aktualisiere die Graph-Komponenten
-                const graphElements = this.shadowRoot?.querySelectorAll('flower-graph') as NodeListOf<any>;
-                if (graphElements) {
-                    graphElements.forEach(graph => {
-                        if (graph) {
-                            graph.entityId = entityId;
-                            // Zuerst den Datumsbereich aktualisieren, dann die Daten
-                            if (typeof graph.updateDateRange === 'function') {
-                                graph.updateDateRange().then(() => {
-                                    if (typeof graph.updateGraphData === 'function') {
-                                        graph.updateGraphData(true);
-                                    }
-                                });
-                            } else if (typeof graph.updateGraphData === 'function') {
-                                // Fallback, falls updateDateRange nicht verfügbar ist
-                                graph.updateGraphData(true);
-                            }
-                        }
-                    });
-                }
                 
                 // Aktualisiere die Consumption-Komponenten
                 const consumptionElements = this.shadowRoot?.querySelectorAll('flower-consumption') as NodeListOf<any>;
@@ -508,26 +485,6 @@ export default class BrokkoliCard extends LitElement {
             
             // Daten laden und UI aktualisieren
             this.get_data(this._hass).then(() => {
-                // Aktualisiere die Graph-Komponenten
-                const graphElements = this.shadowRoot?.querySelectorAll('flower-graph') as NodeListOf<any>;
-                if (graphElements) {
-                    graphElements.forEach(graph => {
-                        if (graph) {
-                            graph.entityId = this._popupData.originalEntity;
-                            // Zuerst den Datumsbereich aktualisieren, dann die Daten
-                            if (typeof graph.updateDateRange === 'function') {
-                                graph.updateDateRange().then(() => {
-                                    if (typeof graph.updateGraphData === 'function') {
-                                        graph.updateGraphData(true);
-                                    }
-                                });
-                            } else if (typeof graph.updateGraphData === 'function') {
-                                // Fallback, falls updateDateRange nicht verfügbar ist
-                                graph.updateGraphData(true);
-                            }
-                        }
-                    });
-                }
                 
                 // Aktualisiere die Consumption-Komponenten
                 const consumptionElements = this.shadowRoot?.querySelectorAll('flower-consumption') as NodeListOf<any>;
@@ -876,42 +833,7 @@ export default class BrokkoliCard extends LitElement {
         `;
     }
 
-    private _renderTimeline(): TemplateResult {
-        // Verwende die ausgewählte Plant, wenn vorhanden, sonst die konfigurierte Entity
-        const entityId = this.selectedPlantEntity || this.config.entity;
-        
-        if (this.config.show_elements.includes('timeline')) {
-            // Wenn timeline direkt angezeigt wird, in einen Container einbetten
-            return html`
-                <div class="timeline-container">
-                    <flower-graph
-                        .hass=${this._hass}
-                        .entityId=${entityId}
-                    ></flower-graph>
-                    <flower-timeline
-                        .hass=${this._hass}
-                        .entityId=${entityId}
-                    ></flower-timeline>
-                </div>
-            `;
-        } else if (this._expanded?.timeline) {
-            // Wenn timeline über das Optionsmenü angezeigt wird
-            return html`
-                <div class="expanded-content show" data-section="timeline">
-                    <flower-graph
-                        .hass=${this._hass}
-                        .entityId=${entityId}
-                    ></flower-graph>
-                    <flower-timeline
-                        .hass=${this._hass}
-                        .entityId=${entityId}
-                    ></flower-timeline>
-                </div>
-            `;
-        }
-        // Leeres div zurückgeben, wenn nicht angezeigt werden soll
-        return html`<div class="expanded-content" data-section="timeline"></div>`;
-    }
+
 
     private _renderConsumption(): TemplateResult {
         // Verwende die ausgewählte Plant, wenn vorhanden, sonst die konfigurierte Entity
@@ -1183,8 +1105,6 @@ export default class BrokkoliCard extends LitElement {
                 switch(element) {
                     case 'attributes':
                         return this._renderAttributes();
-                    case 'timeline':
-                        return this._renderTimeline();
                     case 'consumption':
                         return this._renderConsumption();
                     case 'history':
@@ -1205,8 +1125,6 @@ export default class BrokkoliCard extends LitElement {
                 switch(element) {
                     case 'attributes':
                         return this._renderAttributes();
-                    case 'timeline':
-                        return this._renderTimeline();
                     case 'consumption':
                         return this._renderConsumption();
                     case 'history':
@@ -1384,26 +1302,6 @@ export default class BrokkoliCard extends LitElement {
                     
                     // Daten laden und UI aktualisieren
                     this.get_data(this._hass).then(() => {
-                        // Aktualisiere die Graph-Komponenten
-                        const graphElements = this.shadowRoot?.querySelectorAll('flower-graph') as NodeListOf<any>;
-                        if (graphElements) {
-                            graphElements.forEach(graph => {
-                                if (graph) {
-                                    graph.entityId = selectedEntityId;
-                                    // Zuerst den Datumsbereich aktualisieren, dann die Daten
-                                    if (typeof graph.updateDateRange === 'function') {
-                                        graph.updateDateRange().then(() => {
-                                            if (typeof graph.updateGraphData === 'function') {
-                                                graph.updateGraphData(true);
-                                            }
-                                        });
-                                    } else if (typeof graph.updateGraphData === 'function') {
-                                        // Fallback, falls updateDateRange nicht verfügbar ist
-                                        graph.updateGraphData(true);
-                                    }
-                                }
-                            });
-                        }
                         
                         // Aktualisiere die Consumption-Komponenten
                         const consumptionElements = this.shadowRoot?.querySelectorAll('flower-consumption') as NodeListOf<any>;
@@ -1455,24 +1353,6 @@ export default class BrokkoliCard extends LitElement {
                     
                     // Daten laden und UI aktualisieren
                     this.get_data(this._hass).then(() => {
-                        // Aktualisiere die Graph-Komponenten
-                        const graphElements = this.shadowRoot?.querySelectorAll('flower-graph') as NodeListOf<any>;
-                        if (graphElements) {
-                            graphElements.forEach(graph => {
-                                if (graph) {
-                                    graph.entityId = selectedEntityId;
-                                    if (typeof graph.updateDateRange === 'function') {
-                                        graph.updateDateRange().then(() => {
-                                            if (typeof graph.updateGraphData === 'function') {
-                                                graph.updateGraphData(true);
-                                            }
-                                        });
-                                    } else if (typeof graph.updateGraphData === 'function') {
-                                        graph.updateGraphData(true);
-                                    }
-                                }
-                            });
-                        }
                         
                         // Aktualisiere die Consumption-Komponenten
                         const consumptionElements = this.shadowRoot?.querySelectorAll('flower-consumption') as NodeListOf<any>;
