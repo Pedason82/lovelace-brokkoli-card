@@ -169,7 +169,7 @@
                         </div>
                     `}))}
             </div>
-        `}_selectPlant(t){this.selectedPlantEntity=t,this._showPlantDropdown=!1,!this._popupData.originalEntity&&this.stateObj&&(this._popupData.originalEntity=this.stateObj.entity_id),this._hass&&(this.stateObj,this.stateObj=this._hass.states[t],this.get_data(this._hass).then((()=>{var e,i;const n=null===(e=this.shadowRoot)||void 0===e?void 0:e.querySelectorAll("flower-consumption");n&&n.forEach((e=>{e&&(e.entityId=t)}));const s=new CustomEvent("brokkoli-card-cycle-member-selected",{bubbles:!0,composed:!0,detail:{originalEntityId:this._popupData.originalEntity||(null===(i=this.config)||void 0===i?void 0:i.entity),selectedEntityId:t,sourceCardId:this}});window.dispatchEvent(s),this.requestUpdate()})))}_toggleFlyoutMenu(t){t.stopPropagation(),this._showFlyoutMenu=!this._showFlyoutMenu,this._showFlyoutMenu?document.addEventListener("click",this._handleOutsideClick):document.removeEventListener("click",this._handleOutsideClick)}_renderFlyoutMenu(){this.stateObj.entity_id.startsWith("cycle.");const t=null!==this.selectedPlantEntity;return a.html`
+        `}_selectPlant(t){this.selectedPlantEntity=t,this._showPlantDropdown=!1,!this._popupData.originalEntity&&this.stateObj&&(this._popupData.originalEntity=this.stateObj.entity_id),this._hass&&(this.stateObj=this._hass.states[t],this.get_data(this._hass).then((()=>{var e,i;const n=null===(e=this.shadowRoot)||void 0===e?void 0:e.querySelectorAll("flower-consumption");n&&n.forEach((e=>{e&&(e.entityId=t)}));const s=new CustomEvent("brokkoli-card-cycle-member-selected",{bubbles:!0,composed:!0,detail:{originalEntityId:this._popupData.originalEntity||(null===(i=this.config)||void 0===i?void 0:i.entity),selectedEntityId:t,sourceCardId:this}});window.dispatchEvent(s),this.requestUpdate()})))}_toggleFlyoutMenu(t){t.stopPropagation(),this._showFlyoutMenu=!this._showFlyoutMenu,this._showFlyoutMenu?document.addEventListener("click",this._handleOutsideClick):document.removeEventListener("click",this._handleOutsideClick)}_renderFlyoutMenu(){const t=null!==this.selectedPlantEntity;return a.html`
             <div class="flyout-menu">
                 ${t?a.html`
                     <div class="flyout-menu-item" @click="${this._returnToCycle}">
@@ -298,9 +298,9 @@
                     </div>
                 </div>
             </div>
-        `}_renderOptions(){var t,e,i,n,s;const o=this.config.option_elements;if(0===o.length)return a.html``;const r={attributes:{icon:"mdi:tune",expanded:null===(t=this._expanded)||void 0===t?void 0:t.attributes},timeline:{icon:"mdi:chart-timeline-variant",expanded:null===(e=this._expanded)||void 0===e?void 0:e.timeline},consumption:{icon:"mdi:chart-box-outline",expanded:null===(i=this._expanded)||void 0===i?void 0:i.consumption},history:{icon:"mdi:history",expanded:null===(n=this._expanded)||void 0===n?void 0:n.history},details:{icon:"mdi:information-outline",expanded:null===(s=this._expanded)||void 0===s?void 0:s.details}};return a.html`
+        `}_renderOptions(){var t,e,i,n;const s=this.config.option_elements;if(0===s.length)return a.html``;const o={attributes:{icon:"mdi:tune",expanded:null===(t=this._expanded)||void 0===t?void 0:t.attributes},consumption:{icon:"mdi:chart-box-outline",expanded:null===(e=this._expanded)||void 0===e?void 0:e.consumption},history:{icon:"mdi:history",expanded:null===(i=this._expanded)||void 0===i?void 0:i.history},details:{icon:"mdi:information-outline",expanded:null===(n=this._expanded)||void 0===n?void 0:n.details}};return a.html`
             <div class="options-container">
-                ${o.map((t=>{if(t in r){const e=r[t];return a.html`
+                ${s.map((t=>{if(t in o){const e=o[t];return a.html`
                             <div class="options-section ${e.expanded?"expanded":""}" 
                                  @click="${e=>this._toggleExpand(e,t)}">
                                 <ha-icon icon="${e.icon}"></ha-icon>

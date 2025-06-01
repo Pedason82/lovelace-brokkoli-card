@@ -389,7 +389,6 @@ export default class BrokkoliCard extends LitElement {
         // Lade die Daten der ausgewählten Plant
         if (this._hass) {
             // Temporär die stateObj auf die ausgewählte Plant setzen
-            const originalStateObj = this.stateObj;
             this.stateObj = this._hass.states[entityId];
             
             // Daten laden und UI aktualisieren
@@ -445,7 +444,6 @@ export default class BrokkoliCard extends LitElement {
 
     private _renderFlyoutMenu(): TemplateResult {
         // Zeige unterschiedliche Menüoptionen für Plants und Cycles
-        const isCycle = this.stateObj.entity_id.startsWith('cycle.');
         const isSelectedPlant = this.selectedPlantEntity !== null;
         
         return html`
@@ -520,7 +518,7 @@ export default class BrokkoliCard extends LitElement {
     }
 
     private async _handleClonePlant() {
-        const result = await this._hass.callService('plant', 'clone_plant', {
+        await this._hass.callService('plant', 'clone_plant', {
             source_entity_id: this.stateObj.entity_id,
             ...this._popupData
         });
@@ -715,7 +713,7 @@ export default class BrokkoliCard extends LitElement {
                     
                     return true;
                 })
-                .filter(([entity_id, state]: [string, any]) => {
+                .filter(([_, state]: [string, any]) => {
                     // Filtere nach Sensortyp basierend auf Attributen oder Einheiten
                     const deviceClass = state.attributes?.device_class;
                     const unit = state.attributes?.unit_of_measurement;
@@ -796,10 +794,6 @@ export default class BrokkoliCard extends LitElement {
             'attributes': {
                 icon: 'mdi:tune',
                 expanded: this._expanded?.attributes
-            },
-            'timeline': {
-                icon: 'mdi:chart-timeline-variant',
-                expanded: this._expanded?.timeline
             },
             'consumption': {
                 icon: 'mdi:chart-box-outline',
@@ -1220,7 +1214,7 @@ export default class BrokkoliCard extends LitElement {
                 this._currentImageIndex = 0;
                 this._nextImageIndex = 0;
             }
-        } catch (err) {
+        } catch (_) {
             this.plantinfo = { result: {} };
             this._imageUrls = [];
             this._currentImageIndex = 0;
