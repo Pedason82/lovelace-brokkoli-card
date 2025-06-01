@@ -395,15 +395,141 @@ export const galleryStyles = css`
         opacity: 0.5;
     }
 
+    /* Enhanced Mobile Optimization */
+    @media (max-width: 768px) {
+        .gallery-header-buttons {
+            gap: 8px;
+        }
+
+        .gallery-header-buttons ha-icon-button {
+            --mdc-icon-button-size: 44px;
+            --mdc-icon-size: 24px;
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        .gallery-nav {
+            --mdc-icon-button-size: 56px;
+            --mdc-icon-size: 32px;
+            padding: 12px;
+        }
+
+        .gallery-nav.prev {
+            left: 16px;
+        }
+
+        .gallery-nav.next {
+            right: 16px;
+        }
+
+        .thumbnails-scroll {
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            padding: 8px 16px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .thumbnail-group {
+            scroll-snap-align: start;
+            margin-right: 16px;
+        }
+
+        .thumbnail-container {
+            height: 72px;
+            min-width: 72px;
+            touch-action: manipulation;
+        }
+
+        .gallery-date {
+            font-size: 0.9em;
+            max-width: 60%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .play-pause-button {
+            --mdc-icon-button-size: 44px;
+            --mdc-icon-size: 24px;
+        }
+    }
+
     @media (max-width: 600px) {
         .gallery-date {
             right: 120px;
+            font-size: 0.85em;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .gallery-header {
+            padding: 12px;
+        }
+
+        .gallery-header-buttons ha-icon-button {
+            --mdc-icon-button-size: 40px;
+            --mdc-icon-size: 20px;
+        }
+
+        .gallery-nav {
+            --mdc-icon-button-size: 48px;
+            --mdc-icon-size: 28px;
+        }
+
+        .thumbnail-container {
+            height: 64px;
+            min-width: 64px;
+        }
+
+        .thumbnail-day {
+            font-size: 0.7em;
+            padding: 1px 4px;
+        }
+
+        .gallery-date {
+            right: 100px;
+            font-size: 0.8em;
         }
     }
 
     @media (max-width: 400px) {
         .gallery-date {
-            right: 100px;
+            right: 90px;
+            font-size: 0.75em;
         }
+
+        .gallery-header-buttons ha-icon-button {
+            --mdc-icon-button-size: 36px;
+            --mdc-icon-size: 18px;
+        }
+    }
+
+    /* Touch-specific improvements */
+    .gallery-nav {
+        touch-action: manipulation;
+        user-select: none;
+    }
+
+    .thumbnail-container {
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .gallery-image-container {
+        touch-action: pan-x pan-y;
+        user-select: none;
+    }
+
+    /* Smooth scrolling for thumbnails */
+    .thumbnails-scroll {
+        scroll-behavior: smooth;
+    }
+
+    /* Improve touch feedback */
+    .gallery-nav:active,
+    .thumbnail-container:active,
+    .gallery-header-buttons ha-icon-button:active {
+        opacity: 0.7;
+        transform: scale(0.95);
+        transition: all 0.1s ease;
     }
 `; 

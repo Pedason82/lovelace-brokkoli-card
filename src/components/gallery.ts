@@ -4,6 +4,9 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { HomeAssistant } from 'custom-card-helpers';
 import { galleryStyles } from '../styles/gallery-styles';
 import { PlantEntityUtils } from '../utils/plant-entity-utils';
+import { ImageCacheManager } from '../utils/image-cache';
+import { ThumbnailGenerator, generateMobileThumbnail } from '../utils/thumbnail-generator';
+import { TouchHandler, createGalleryTouchHandler } from '../utils/touch-handler';
 
 // Klasse definieren ohne customElement-Decorator
 export class FlowerGallery extends LitElement {
@@ -19,12 +22,18 @@ export class FlowerGallery extends LitElement {
     @state() private _showDeleteFlyout = false;
     @state() private _showMainImageFlyout = false;
     @state() private _isPlaying = true;
+    @state() private _thumbnailUrls = new Map<string, string>();
     private _imageRotationInterval?: NodeJS.Timeout;
     private _reparentedToBody: boolean = false;
     private _plantInfo: Record<string, any> | null = null;
     private _isLoading: boolean = false;
     private _imagesList: Array<{url: string, date: Date}> = [];
     private _isImagesLoading: boolean = false;
+    private _imageCache = ImageCacheManager.getInstance();
+    private _preloadingPromises = new Map<string, Promise<HTMLImageElement>>();
+    private _thumbnailCache = new Map<string, string>();
+    private _thumbnailPromises = new Map<string, Promise<string>>();
+    private _touchHandler?: TouchHandler;
 
     private async _changeImage(direction: 'next' | 'prev' = 'next') {
         this._isFading = true;
@@ -37,14 +46,133 @@ export class FlowerGallery extends LitElement {
         } else {
             this._currentImageIndex = (this._currentImageIndex - 1 + this.images.length) % this.images.length;
         }
-        
+
         this._isFading = false;
         this.requestUpdate();
+
+        // Trigger preloading after image change
+        this._preloadAdjacentImages();
+
+        // Scroll to active thumbnail
+        this._scrollToActiveThumbnail();
+    }
+
+    /**
+     * Preload images adjacent to current image for smooth navigation
+     */
+    private async _preloadAdjacentImages(): Promise<void> {
+        if (this.images.length <= 1) return;
+
+        const preloadRange = 2; // Preload 2 images ahead/behind
+        const promises: Promise<HTMLImageElement>[] = [];
+
+        for (let i = -preloadRange; i <= preloadRange; i++) {
+            if (i === 0) continue; // Skip current image
+
+            const index = (this._currentImageIndex + i + this.images.length) % this.images.length;
+            const url = this.images[index];
+
+            if (url && !this._preloadingPromises.has(url) && !this._imageCache.isCached(url)) {
+                const promise = this._imageCache.preloadImage(url);
+                this._preloadingPromises.set(url, promise);
+                promises.push(promise);
+            }
+        }
+
+        // Don't await all - let them load in background
+        if (promises.length > 0) {
+            Promise.allSettled(promises).then(() => {
+                // Clean up completed promises
+                promises.forEach(promise => {
+                    const url = [...this._preloadingPromises.entries()]
+                        .find(([_, p]) => p === promise)?.[0];
+                    if (url) this._preloadingPromises.delete(url);
+                });
+            });
+        }
+    }
+
+    /**
+     * Get thumbnail URL for an image, generating if needed
+     */
+    private async _getThumbnailUrl(originalUrl: string): Promise<string> {
+        if (this._thumbnailCache.has(originalUrl)) {
+            return this._thumbnailCache.get(originalUrl)!;
+        }
+
+        // Return existing promise if already generating
+        if (this._thumbnailPromises.has(originalUrl)) {
+            return this._thumbnailPromises.get(originalUrl)!;
+        }
+
+        // Generate new thumbnail
+        const thumbnailPromise = generateMobileThumbnail(originalUrl);
+        this._thumbnailPromises.set(originalUrl, thumbnailPromise);
+
+        try {
+            const thumbnailUrl = await thumbnailPromise;
+            this._thumbnailCache.set(originalUrl, thumbnailUrl);
+            this._thumbnailUrls.set(originalUrl, thumbnailUrl);
+            this.requestUpdate(); // Trigger re-render with new thumbnail
+            return thumbnailUrl;
+        } catch (error) {
+            console.warn('Failed to generate thumbnail, using original:', error);
+            return originalUrl;
+        } finally {
+            this._thumbnailPromises.delete(originalUrl);
+        }
+    }
+
+    /**
+     * Preload thumbnails for visible images
+     */
+    private async _preloadThumbnails(): Promise<void> {
+        if (this.images.length === 0) return;
+
+        // Generate thumbnails for current and adjacent images first
+        const priorityIndices = [];
+        const range = 3; // Current + 3 on each side
+
+        for (let i = -range; i <= range; i++) {
+            const index = (this._currentImageIndex + i + this.images.length) % this.images.length;
+            priorityIndices.push(index);
+        }
+
+        // Generate priority thumbnails
+        const priorityPromises = priorityIndices.map(index =>
+            this._getThumbnailUrl(this.images[index])
+        );
+
+        // Don't wait for all, but start the process
+        Promise.allSettled(priorityPromises).then(() => {
+            // After priority thumbnails, generate the rest in background
+            this._generateRemainingThumbnails();
+        });
+    }
+
+    /**
+     * Generate remaining thumbnails in background
+     */
+    private async _generateRemainingThumbnails(): Promise<void> {
+        const batchSize = 3;
+        const remainingUrls = this.images.filter(url => !this._thumbnailCache.has(url));
+
+        for (let i = 0; i < remainingUrls.length; i += batchSize) {
+            const batch = remainingUrls.slice(i, i + batchSize);
+            const promises = batch.map(url => this._getThumbnailUrl(url));
+
+            await Promise.allSettled(promises);
+
+            // Small delay to keep UI responsive
+            if (i + batchSize < remainingUrls.length) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
     }
 
     private async _selectImage(index: number) {
         if (index === this._currentImageIndex) return;
-        
+
         // Starte Fade-Out
         this._isFading = true;
         this.requestUpdate();
@@ -54,10 +182,32 @@ export class FlowerGallery extends LitElement {
 
         // Setze neuen Index
         this._currentImageIndex = index;
-        
+
         // Starte Fade-In
         this._isFading = false;
         this.requestUpdate();
+
+        // Trigger preloading after image selection
+        this._preloadAdjacentImages();
+
+        // Scroll to active thumbnail
+        this._scrollToActiveThumbnail();
+    }
+
+    /**
+     * Scroll to the active thumbnail for better mobile UX
+     */
+    private _scrollToActiveThumbnail(): void {
+        this.updateComplete.then(() => {
+            const activeThumb = this.shadowRoot?.querySelector('.thumbnail-container.active');
+            if (activeThumb) {
+                activeThumb.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center'
+                });
+            }
+        });
     }
 
     private _toggleFlyout(e: Event) {
@@ -251,6 +401,12 @@ export class FlowerGallery extends LitElement {
             // Update slideshow after images are loaded
             this._updateSlideshow();
 
+            // Start preloading adjacent images
+            this._preloadAdjacentImages();
+
+            // Start preloading thumbnails
+            this._preloadThumbnails();
+
             // Nötige Updates auslösen
             this.requestUpdate();
         } catch (err) {
@@ -273,6 +429,32 @@ export class FlowerGallery extends LitElement {
         this._updateSlideshow();
         // Lade die Pflanzen-Info (und dann die Bilder)
         this._loadPlantInfo();
+
+        // Start initial preloading if images are already available
+        if (this.images.length > 0) {
+            this._preloadAdjacentImages();
+        }
+
+        // Initialize touch handler after element is connected
+        this.updateComplete.then(() => {
+            this._initializeTouchHandler();
+        });
+    }
+
+    /**
+     * Initialize touch handler for gesture support
+     */
+    private _initializeTouchHandler(): void {
+        const imageContainer = this.shadowRoot?.querySelector('.gallery-image-container') as HTMLElement;
+        if (imageContainer && !this._touchHandler) {
+            this._touchHandler = createGalleryTouchHandler(imageContainer, {
+                onNext: () => this._changeImage('next'),
+                onPrevious: () => this._changeImage('prev'),
+                onClose: () => this._close(new Event('swipe')),
+                onTogglePlayPause: () => this._togglePlayPause(new Event('tap'))
+            });
+            this._touchHandler.enable();
+        }
     }
 
     disconnectedCallback() {
@@ -280,6 +462,16 @@ export class FlowerGallery extends LitElement {
         if (this._imageRotationInterval) {
             clearInterval(this._imageRotationInterval);
         }
+
+        // Cleanup touch handler
+        if (this._touchHandler) {
+            this._touchHandler.destroy();
+            this._touchHandler = undefined;
+        }
+
+        // Cleanup thumbnail cache
+        this._thumbnailCache.clear();
+        this._thumbnailPromises.clear();
     }
 
     static get styles(): CSSResult {
@@ -765,7 +957,7 @@ export class FlowerGallery extends LitElement {
                                                 <div class="thumbnail-container ${this.images[this._currentImageIndex] === image.url ? 'active' : ''}"
                                                      @click="${() => this._selectImage(this.images.indexOf(image.url))}">
                                                     <div class="thumbnail-day">Tag ${image.day}/${image.totalDays}</div>
-                                                    <img class="thumbnail" src="${image.url}">
+                                                    <img class="thumbnail" src="${this._thumbnailUrls.get(image.url) || image.url}">
                                                 </div>
                                             `)}
                                         </div>
