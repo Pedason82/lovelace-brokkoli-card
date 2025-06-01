@@ -311,7 +311,7 @@ export default class BrokkoliCard extends LitElement {
         }
     }
 
-    private _handleOutsideDropdownClick = (e: MouseEvent) => {
+    private _handleOutsideDropdownClick = (_: MouseEvent) => {
         this._showPlantDropdown = false;
         this.requestUpdate();
     }

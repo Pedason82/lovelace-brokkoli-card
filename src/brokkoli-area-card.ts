@@ -1,7 +1,7 @@
-import { CSSResult, HTMLTemplateResult, LitElement, html, TemplateResult, css } from 'lit';
+import { CSSResult, HTMLTemplateResult, LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { HomeAssistant, LovelaceCardEditor } from 'custom-card-helpers';
-import { styleMap } from 'lit/directives/style-map.js';
+
 import { positionStyles } from './styles/area-styles';
 import './components/brokkoli-area';
 import { PlantEntityUtils } from './utils/plant-entity-utils';
@@ -79,7 +79,7 @@ export default class BrokkoliAreaCard extends LitElement {
   }
 
   // Statische Methode, um eine Standardkonfiguration zu erhalten
-  static getStubConfig(ha: HomeAssistant) {
+  static getStubConfig(_: HomeAssistant) {
     // Verwende die erste verfügbare Area oder "wohnzimmer" als Fallback
     return {
       type: "custom:brokkoli-area-card",

@@ -2,7 +2,6 @@ import {
   LitElement,
   html,
   css,
-  PropertyValues,
   nothing,
   CSSResult,
   TemplateResult
@@ -14,9 +13,7 @@ import { positionStyles } from '../styles/area-styles';
 import './plant-create-dialog';
 import './brokkoli-area-legend'; // Importiere die neue Legende-Komponente
 import { LegendSettings } from './brokkoli-area-legend'; // Importiere die Settings-Schnittstelle
-import { DisplayedAttribute, DisplayedAttributes } from '../types/brokkoli-card-types';
-import { renderAttribute } from '../utils/attributes';
-import { classMap } from 'lit/directives/class-map.js';
+
 import { PlantEntityUtils } from '../utils/plant-entity-utils';
 
 interface Position {
@@ -31,11 +28,7 @@ interface CycleGroup {
   positions: Position[];
 }
 
-interface PositionHistoryEntry {
-  date: string;
-  position_x: number;
-  position_y: number;
-}
+
 
 @customElement('brokkoli-area')
 export class BrokkoliArea extends LitElement {
@@ -92,7 +85,7 @@ export class BrokkoliArea extends LitElement {
   
   @state() private _highlightCell: {x: number, y: number} | null = null;
   
-  @state() private _plantInfoCache: Record<string, any> = {};
+  @state() private _plantInfoCache: Record<string, Record<string, any>> = {};
   @state() private _plantRetryTimeouts: Record<string, number> = {}; // Timeouts für Pflanzen-Ladungen
   @state() private _plantLastLoaded: Record<string, number> = {}; // Zeitpunkt der letzten Ladung für jede Pflanze
   
@@ -136,7 +129,7 @@ export class BrokkoliArea extends LitElement {
   }
   
   // Wird aufgerufen, wenn sich Eigenschaften ändern
-  updated(changedProps: Map<string, any>) {
+  updated(changedProps: Map<string, unknown>) {
     super.updated(changedProps);
     
     // Wenn sich hass oder entities geändert haben, lade die Positionen neu
@@ -458,7 +451,6 @@ export class BrokkoliArea extends LitElement {
     sortedEntities.forEach((id, i) => zIndexMap.set(id, baseZIndex + (totalCount - 1 - i)));
     
     // Für Drag-Operationen werden wir ein Offset verwenden, das größer als die Anzahl der Pflanzen ist
-    const totalEntities = this.entities.length;
     
     return sortedEntities.map(entityId => {
       const entity = this.hass!.states[entityId];

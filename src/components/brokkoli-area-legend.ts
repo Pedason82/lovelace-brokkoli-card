@@ -2,7 +2,6 @@ import {
   LitElement,
   html,
   PropertyValues,
-  TemplateResult,
 } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { styleMap } from 'lit/directives/style-map.js';
@@ -46,7 +45,7 @@ export class BrokkoliAreaLegend extends LitElement {
   @property({ attribute: false }) initialHeatmapOpacity?: number;
   
   // Zugriff auf dynamische PlantInfo-Daten
-  @property({ attribute: false }) plantInfo?: any;
+  @property({ attribute: false }) plantInfo?: Record<string, any>;
   
   // Aktueller Zustand der Legende
   @state() private _activeTab = 'rings'; // 'rings', 'labels', oder 'heatmap'

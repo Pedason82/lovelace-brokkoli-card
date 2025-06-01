@@ -113,7 +113,7 @@ export default class BrokkoliListCard extends LitElement {
     }
     
     // Hilfsmethode zum Erstellen der Sensor-Map aus API-Infos
-    private _buildSensorMap(apiInfo: any): Record<string, string> {
+    private _buildSensorMap(apiInfo: Record<string, any>): Record<string, string> {
         if (!apiInfo) return {};
         
         const sensorMap: Record<string, string> = {};
