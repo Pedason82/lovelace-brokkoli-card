@@ -21,8 +21,8 @@ console.info(
     'color: darkblue; background: white; font-weight: bold;'
 );
 
-(window as any).customCards = (window as any).customCards || [];
-(window as any).customCards.push({
+(window as Record<string, any>).customCards = (window as Record<string, any>).customCards || [];
+(window as Record<string, any>).customCards.push({
     type: 'brokkoli-list-card',
     name: 'Brokkoli List Card',
     preview: true,

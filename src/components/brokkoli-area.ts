@@ -224,7 +224,7 @@ export class BrokkoliArea extends LitElement {
             
             return; // Position gefunden, weiter zum nächsten
           }
-        } catch (e) {
+        } catch (_) {
           // Fehler beim Parsen des JSON
         }
       }
@@ -553,10 +553,9 @@ export class BrokkoliArea extends LitElement {
             `;
           } else {
             // Fallback für nicht vorhandene Sensordaten: Zeige Overlay mit 0% der Hauptfarbe
-            const baseColor = this._getHeatmapColor() || `var(--sensor-ring-${activeHeatmap}-color)`;
             const secondaryColor = this._getHeatmapSecondaryColor() || 'white';
             const opacity = this._getHeatmapOpacity();
-            
+
             heatmapOverlay = html`
               <div class="heatmap-overlay" style=${styleMap({
                 backgroundColor: secondaryColor,

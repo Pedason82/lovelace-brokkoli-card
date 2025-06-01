@@ -127,7 +127,7 @@
               <div class="heatmap-overlay" style=${(0,a.styleMap)({backgroundColor:`color-mix(in srgb, ${s} ${i}%, ${n})`,opacity:l})}></div>
             `}else if(t){const e=Number(t.current||0),i=Number(t.min||0),s=Number(t.max||100),n=Math.min(1,Math.max(0,(e-i)/(s-i))),r=Math.round(100*n),l=this._getHeatmapColor()||`var(--sensor-ring-${v}-color)`,c=this._getHeatmapSecondaryColor()||"white",h=this._getHeatmapOpacity();y=o.html`
               <div class="heatmap-overlay" style=${(0,a.styleMap)({backgroundColor:`color-mix(in srgb, ${l} ${r}%, ${c})`,opacity:h})}></div>
-            `}else{this._getHeatmapColor();const t=this._getHeatmapSecondaryColor()||"white",e=this._getHeatmapOpacity();y=o.html`
+            `}else{const t=this._getHeatmapSecondaryColor()||"white",e=this._getHeatmapOpacity();y=o.html`
               <div class="heatmap-overlay" style=${(0,a.styleMap)({backgroundColor:t,opacity:e})}></div>
             `}}}let b="";t.startsWith("plant.")&&(this._plantInfoCache[t]&&this._plantInfoCache[t].result?b=this._renderPlantSensorRings(t):(b=this._renderDisabledRings(),this.hass&&c.PlantEntityUtils.getPlantInfo(this.hass,t).then((e=>{e&&(this._plantInfoCache[t]={result:e},this.requestUpdate())}))));const x=this._renderSensorLabels(t);return o.html`
         <div 

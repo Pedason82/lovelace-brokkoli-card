@@ -36,8 +36,8 @@ export interface BrokkoliAreaCardConfig {
 }
 
 // Registriere die Karte
-(window as any).customCards = (window as any).customCards || [];
-(window as any).customCards.push({
+(window as Record<string, any>).customCards = (window as Record<string, any>).customCards || [];
+(window as Record<string, any>).customCards.push({
   type: AREA_CARD_NAME,
   name: 'Brokkoli Area Card',
   preview: true,
