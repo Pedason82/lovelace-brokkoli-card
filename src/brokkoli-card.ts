@@ -541,12 +541,12 @@ export default class BrokkoliCard extends LitElement {
     }
 
     private async _handleReplaceSensors() {
-        const sensorTypes = ['temperature', 'moisture', 'illuminance', 'humidity', 'conductivity', 'power_consumption'];
+        const sensorTypes = ['temperature', 'moisture', 'illuminance', 'humidity', 'conductivity', 'power_consumption', 'energy_consumption'];
         const plantName = this.stateObj.entity_id.split('.')[1];
-        
+
         for (const type of sensorTypes) {
             const newSensor = this._popupData[`new_${type}_sensor`];
-            
+
             if (newSensor) {
                 const currentSensor = `sensor.${plantName}_${type}`;
                 await this._hass.callService('plant', 'replace_sensor', {
@@ -617,9 +617,14 @@ export default class BrokkoliCard extends LitElement {
                                @input="${(e: InputEvent) => this._popupData.conductivity_sensor = (e.target as HTMLInputElement).value}">
                     </div>
                     <div class="form-field">
-                        <label>Stromverbrauchssensor</label>
+                        <label>Stromverbrauchssensor (W)</label>
                         <input type="text" .value="${this._popupData.power_consumption_sensor || ''}"
                                @input="${(e: InputEvent) => this._popupData.power_consumption_sensor = (e.target as HTMLInputElement).value}">
+                    </div>
+                    <div class="form-field">
+                        <label>Energieverbrauchssensor (kWh)</label>
+                        <input type="text" .value="${this._popupData.energy_consumption_sensor || ''}"
+                               @input="${(e: InputEvent) => this._popupData.energy_consumption_sensor = (e.target as HTMLInputElement).value}">
                     </div>
                     <div class="popup-buttons">
                         <button @click="${this._closePopup}">Abbrechen</button>
