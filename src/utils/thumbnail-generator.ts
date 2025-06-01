@@ -112,31 +112,18 @@ export class ThumbnailGenerator {
                     this.canvas.width = width;
                     this.canvas.height = height;
 
-                    // Calculate aspect ratio and positioning
-                    const aspectRatio = img.width / img.height;
-                    let drawWidth = width;
-                    let drawHeight = height;
-                    let offsetX = 0;
-                    let offsetY = 0;
-
-                    if (aspectRatio > 1) {
-                        // Landscape image
-                        drawHeight = width / aspectRatio;
-                        offsetY = (height - drawHeight) / 2;
+                    // For square thumbnails, use smart cropping
+                    if (width === height) {
+                        this._drawSquareThumbnail(img, width);
                     } else {
-                        // Portrait image
-                        drawWidth = height * aspectRatio;
-                        offsetX = (width - drawWidth) / 2;
+                        // Original logic for non-square thumbnails
+                        this._drawStandardThumbnail(img, width, height);
                     }
 
-                    // Clear canvas and draw image
-                    this.ctx.clearRect(0, 0, width, height);
-                    this.ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-
                     // Convert to blob URL
-                    const mimeType = format === 'jpeg' ? 'image/jpeg' : 
+                    const mimeType = format === 'jpeg' ? 'image/jpeg' :
                                    format === 'webp' ? 'image/webp' : 'image/png';
-                    
+
                     this.canvas.toBlob((blob) => {
                         if (blob) {
                             resolve(URL.createObjectURL(blob));
@@ -152,6 +139,54 @@ export class ThumbnailGenerator {
             img.onerror = () => reject(new Error(`Failed to load image: ${imageUrl}`));
             img.src = imageUrl;
         });
+    }
+
+    /**
+     * Draw perfect square thumbnail with smart cropping
+     */
+    private static _drawSquareThumbnail(img: HTMLImageElement, size: number): void {
+        // Clear canvas
+        this.ctx.clearRect(0, 0, size, size);
+
+        // Calculate the largest square that fits in the image
+        const minDimension = Math.min(img.width, img.height);
+
+        // Calculate crop coordinates (center the crop area)
+        const cropX = (img.width - minDimension) / 2;
+        const cropY = (img.height - minDimension) / 2;
+
+        // Draw the center square portion of the image
+        this.ctx.drawImage(
+            img,
+            cropX, cropY, minDimension, minDimension,  // Source: crop square from center
+            0, 0, size, size                           // Destination: fill entire canvas
+        );
+    }
+
+    /**
+     * Draw standard thumbnail with aspect ratio preservation
+     */
+    private static _drawStandardThumbnail(img: HTMLImageElement, width: number, height: number): void {
+        // Original logic for non-square thumbnails
+        const aspectRatio = img.width / img.height;
+        let drawWidth = width;
+        let drawHeight = height;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (aspectRatio > 1) {
+            // Landscape image
+            drawHeight = width / aspectRatio;
+            offsetY = (height - drawHeight) / 2;
+        } else {
+            // Portrait image
+            drawWidth = height * aspectRatio;
+            offsetX = (width - drawWidth) / 2;
+        }
+
+        // Clear canvas and draw image
+        this.ctx.clearRect(0, 0, width, height);
+        this.ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     }
 
     private static _addToCache(key: string, thumbnailUrl: string): void {
@@ -172,16 +207,26 @@ export class ThumbnailGenerator {
 }
 
 /**
- * Utility function for mobile-optimized thumbnails
+ * Utility function for mobile-optimized square thumbnails
  */
 export function generateMobileThumbnail(imageUrl: string): Promise<string> {
-    // Smaller thumbnails for mobile devices
+    // Responsive square thumbnails for different screen sizes
     const isMobile = window.innerWidth <= 768;
-    const size = isMobile ? 64 : 80;
-    
+    const isSmallMobile = window.innerWidth <= 480;
+
+    let size: number;
+    if (isSmallMobile) {
+        size = 64;  // Small mobile
+    } else if (isMobile) {
+        size = 72;  // Tablet
+    } else {
+        size = 80;  // Desktop
+    }
+
+    // Always generate perfect squares
     return ThumbnailGenerator.generateThumbnail(imageUrl, {
         width: size,
-        height: size,
+        height: size,  // Same as width for perfect squares
         quality: isMobile ? 0.7 : 0.8,
         format: 'jpeg'
     });
