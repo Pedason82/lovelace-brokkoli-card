@@ -18,10 +18,8 @@ export class FlowerGallery extends LitElement {
     @property({ type: Number }) public initialImageIndex?: number;
     @state() private _currentImageIndex = 0;
     @state() private _isFading = false;
-    @state() private _showFlyout = false;
-    @state() private _showDeleteFlyout = false;
-    @state() private _showMainImageFlyout = false;
-    @state() private _isPlaying = true;
+    @state() private _showActionsFlyout = false;
+    @state() private _isPlaying = false;
     @state() private _thumbnailUrls = new Map<string, string>();
     private _imageRotationInterval?: NodeJS.Timeout;
     private _reparentedToBody: boolean = false;
@@ -35,7 +33,7 @@ export class FlowerGallery extends LitElement {
     private _thumbnailPromises = new Map<string, Promise<string>>();
     private _touchHandler?: TouchHandler;
 
-    private async _changeImage(direction: 'next' | 'prev' = 'next') {
+    private async _changeImage(direction: 'next' | 'prev' = 'next', pauseSlideshow: boolean = false) {
         this._isFading = true;
         this.requestUpdate();
 
@@ -49,6 +47,12 @@ export class FlowerGallery extends LitElement {
 
         this._isFading = false;
         this.requestUpdate();
+
+        // Pause slideshow if manually navigating
+        if (pauseSlideshow && this._isPlaying) {
+            this._isPlaying = false;
+            this._updateSlideshow();
+        }
 
         // Trigger preloading after image change
         this._preloadAdjacentImages();
@@ -210,22 +214,10 @@ export class FlowerGallery extends LitElement {
         });
     }
 
-    private _toggleFlyout(e: Event) {
+    private _toggleActionsFlyout(e: Event) {
         e.preventDefault();
         e.stopPropagation();
-        this._showFlyout = !this._showFlyout;
-    }
-
-    private _toggleDeleteFlyout(e: Event) {
-        e.preventDefault();
-        e.stopPropagation();
-        this._showDeleteFlyout = !this._showDeleteFlyout;
-    }
-
-    private _toggleMainImageFlyout(e: Event) {
-        e.preventDefault();
-        e.stopPropagation();
-        this._showMainImageFlyout = !this._showMainImageFlyout;
+        this._showActionsFlyout = !this._showActionsFlyout;
     }
 
     private _togglePlayPause(e: Event) {
@@ -270,7 +262,7 @@ export class FlowerGallery extends LitElement {
             
             try {
                 await this._uploadImage(file);
-                this._showFlyout = false;
+                this._showActionsFlyout = false;
             } catch (error) {
                 alert('Fehler beim Upload: ' + error.message);
             }
@@ -448,8 +440,8 @@ export class FlowerGallery extends LitElement {
         const imageContainer = this.shadowRoot?.querySelector('.gallery-image-container') as HTMLElement;
         if (imageContainer && !this._touchHandler) {
             this._touchHandler = createGalleryTouchHandler(imageContainer, {
-                onNext: () => this._changeImage('next'),
-                onPrevious: () => this._changeImage('prev'),
+                onNext: () => this._changeImage('next', true),
+                onPrevious: () => this._changeImage('prev', true),
                 onClose: () => this._close(new Event('swipe')),
                 onTogglePlayPause: () => this._togglePlayPause(new Event('tap'))
             });
@@ -799,56 +791,48 @@ export class FlowerGallery extends LitElement {
                                 : 'Keine Bilder vorhanden'}
                         </span>
                         <div class="gallery-header-buttons">
-                            <div class="flyout-container ${this._showFlyout ? 'open' : ''} ${this._showDeleteFlyout ? 'delete-open' : ''} ${this._showMainImageFlyout ? 'main-open' : ''}">
+                            <div class="flyout-container ${this._showActionsFlyout ? 'open' : ''}">
                                 <ha-icon-button
-                                    @click="${this._toggleFlyout}"
-                                    .label=${"Bild hinzufügen"}
-                                    class="add-button"
+                                    @click="${this._toggleActionsFlyout}"
+                                    .label=${"Aktionen"}
+                                    class="actions-button"
                                 >
-                                    <ha-icon icon="mdi:camera-plus"></ha-icon>
+                                    <ha-icon icon="mdi:dots-vertical"></ha-icon>
                                 </ha-icon-button>
                                 <div class="flyout-menu">
+                                    <!-- Camera Actions -->
                                     <label class="flyout-option">
-                                        <input 
-                                            type="file" 
-                                            accept="image/*" 
-                                            @change="${(e: Event) => {
-                                                this._handleFileUpload(e);
-                                                this._showFlyout = false;
-                                            }}"
-                                            style="display: none;"
-                                        >
-                                        <ha-icon-button>
-                                            <ha-icon icon="mdi:image"></ha-icon>
-                                        </ha-icon-button>
-                                    </label>
-                                    <label class="flyout-option">
-                                        <input 
-                                            type="file" 
-                                            accept="image/*" 
+                                        <input
+                                            type="file"
+                                            accept="image/*"
                                             capture="environment"
                                             @change="${(e: Event) => {
                                                 this._handleFileUpload(e);
-                                                this._showFlyout = false;
+                                                this._showActionsFlyout = false;
                                             }}"
                                             style="display: none;"
                                         >
-                                        <ha-icon-button>
+                                        <ha-icon-button .label=${"Kamera"}>
                                             <ha-icon icon="mdi:camera"></ha-icon>
                                         </ha-icon-button>
                                     </label>
-                                </div>
-                            </div>
-                            ${this.images.length > 0 ? html`
-                                <div class="flyout-container ${this._showMainImageFlyout ? 'open' : ''} ${this._showDeleteFlyout ? 'delete-open' : ''}">
-                                    <ha-icon-button
-                                        @click="${this._toggleMainImageFlyout}"
-                                        .label=${"Als Hauptbild setzen"}
-                                        class="main-button"
-                                    >
-                                        <ha-icon icon="mdi:image-check"></ha-icon>
-                                    </ha-icon-button>
-                                    <div class="flyout-menu">
+                                    <label class="flyout-option">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            @change="${(e: Event) => {
+                                                this._handleFileUpload(e);
+                                                this._showActionsFlyout = false;
+                                            }}"
+                                            style="display: none;"
+                                        >
+                                        <ha-icon-button .label=${"Galerie"}>
+                                            <ha-icon icon="mdi:image"></ha-icon>
+                                        </ha-icon-button>
+                                    </label>
+
+                                    ${this.images.length > 0 ? html`
+                                        <!-- Set Main Image -->
                                         <ha-icon-button
                                             @click="${async () => {
                                                 const url = this.images[this._currentImageIndex];
@@ -856,64 +840,62 @@ export class FlowerGallery extends LitElement {
                                                 if (filename) {
                                                     try {
                                                         await this._setMainImage(filename);
-                                                        this._showMainImageFlyout = false;
+                                                        this._showActionsFlyout = false;
                                                     } catch (error) {
                                                         alert('Fehler beim Setzen des Hauptbildes: ' + error.message);
                                                     }
                                                 }
                                             }}"
-                                            class="confirm-main"
-                                            style="--mdc-icon-button-size: 32px; color: var(--primary-color, #03a9f4);"
+                                            .label=${"Als Hauptbild setzen"}
+                                            class="flyout-option"
                                         >
-                                            <ha-icon icon="mdi:check"></ha-icon>
+                                            <ha-icon icon="mdi:image-check"></ha-icon>
                                         </ha-icon-button>
-                                    </div>
-                                </div>
-                                <div class="flyout-container ${this._showDeleteFlyout ? 'open' : ''}">
-                                    <ha-icon-button
-                                        @click="${this._toggleDeleteFlyout}"
-                                        .label=${"Bild löschen"}
-                                        class="delete-button"
-                                    >
-                                        <ha-icon icon="mdi:delete"></ha-icon>
-                                    </ha-icon-button>
-                                    <div class="flyout-menu">
+
+                                        <!-- Delete Image -->
                                         <ha-icon-button
                                             @click="${async () => {
-                                                const url = this.images[this._currentImageIndex];
-                                                const filename = url.split('/').pop();
-                                                if (filename) {
-                                                    try {
-                                                        await this._deleteImage(filename);
-                                                        this._showDeleteFlyout = false;
-                                                        // Aktualisiere die Bilderliste
-                                                        this.images = this.images.filter(img => !img.includes(filename));
-                                                        // Wenn das aktuelle Bild gelöscht wurde, zeige das erste Bild an
-                                                        if (this._currentImageIndex >= this.images.length) {
-                                                            this._currentImageIndex = Math.max(0, this.images.length - 1);
+                                                if (confirm('Bild wirklich löschen?')) {
+                                                    const url = this.images[this._currentImageIndex];
+                                                    const filename = url.split('/').pop();
+                                                    if (filename) {
+                                                        try {
+                                                            await this._deleteImage(filename);
+                                                            this._showActionsFlyout = false;
+                                                            // Aktualisiere die Bilderliste
+                                                            this.images = this.images.filter(img => !img.includes(filename));
+                                                            // Wenn das aktuelle Bild gelöscht wurde, zeige das erste Bild an
+                                                            if (this._currentImageIndex >= this.images.length) {
+                                                                this._currentImageIndex = Math.max(0, this.images.length - 1);
+                                                            }
+                                                        } catch (error) {
+                                                            alert('Fehler beim Löschen: ' + error.message);
                                                         }
-                                                    } catch (error) {
-                                                        alert('Fehler beim Löschen: ' + error.message);
                                                     }
                                                 }
                                             }}"
-                                            class="confirm-delete"
-                                            style="--mdc-icon-button-size: 32px; color: var(--error-color, #db4437);"
+                                            .label=${"Bild löschen"}
+                                            class="flyout-option delete-option"
                                         >
-                                            <ha-icon icon="mdi:check"></ha-icon>
+                                            <ha-icon icon="mdi:delete"></ha-icon>
                                         </ha-icon-button>
-                                    </div>
+                                    ` : ''}
+
+                                    ${this.images.length > 1 ? html`
+                                        <!-- Play/Pause Slideshow -->
+                                        <ha-icon-button
+                                            @click="${(e: Event) => {
+                                                this._togglePlayPause(e);
+                                                this._showActionsFlyout = false;
+                                            }}"
+                                            .label="${this._isPlaying ? 'Slideshow pausieren' : 'Slideshow starten'}"
+                                            class="flyout-option"
+                                        >
+                                            <ha-icon icon="${this._isPlaying ? 'mdi:pause' : 'mdi:play'}"></ha-icon>
+                                        </ha-icon-button>
+                                    ` : ''}
                                 </div>
-                            ` : ''}
-                            ${this.images.length > 1 ? html`
-                                <ha-icon-button
-                                    @click="${this._togglePlayPause}"
-                                    .label="${this._isPlaying ? 'Slideshow pausieren' : 'Slideshow starten'}"
-                                    class="play-pause-button"
-                                >
-                                    <ha-icon icon="${this._isPlaying ? 'mdi:pause' : 'mdi:play'}"></ha-icon>
-                                </ha-icon-button>
-                            ` : ''}
+                            </div>
                             <ha-icon-button
                                 @click="${this._close}"
                                 .label=${"Schließen"}
@@ -927,7 +909,7 @@ export class FlowerGallery extends LitElement {
                         <div class="gallery-image-container">
                             <ha-icon-button
                                 class="gallery-nav prev"
-                                @click="${() => this._changeImage('prev')}"
+                                @click="${() => this._changeImage('prev', true)}"
                                 .label=${"Vorheriges Bild"}
                             >
                                 <ha-icon icon="mdi:chevron-left"></ha-icon>
@@ -939,7 +921,7 @@ export class FlowerGallery extends LitElement {
                             </a>
                             <ha-icon-button
                                 class="gallery-nav next"
-                                @click="${() => this._changeImage('next')}"
+                                @click="${() => this._changeImage('next', true)}"
                                 .label=${"Nächstes Bild"}
                             >
                                 <ha-icon icon="mdi:chevron-right"></ha-icon>

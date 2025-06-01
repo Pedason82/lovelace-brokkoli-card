@@ -344,6 +344,7 @@ export const galleryStyles = css`
         justify-content: center;
     }
 
+    .actions-button,
     .add-button,
     .delete-button,
     .main-button,
@@ -357,18 +358,19 @@ export const galleryStyles = css`
         height: 32px;
     }
 
-    .add-button {
+    .actions-button {
         transition: transform 0.2s ease-in-out;
     }
 
-    .flyout-container.open .add-button {
-        transform: rotate(45deg);
+    .flyout-container.open .actions-button {
+        transform: rotate(90deg);
     }
 
-    .delete-button:hover,
-    .main-button:hover,
-    .confirm-delete:hover,
-    .confirm-main:hover {
+    .delete-option {
+        color: var(--error-color, #db4437);
+    }
+
+    .flyout-option:hover {
         opacity: 0.8;
     }
 
