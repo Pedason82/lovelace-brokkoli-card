@@ -139,7 +139,8 @@ export const galleryStyles = css`
         --mdc-icon-button-size: 48px;
         --mdc-icon-size: 36px;
         color: white;
-        z-index: 2;
+        z-index: 10;
+        pointer-events: auto;
     }
 
     .gallery-nav:hover {

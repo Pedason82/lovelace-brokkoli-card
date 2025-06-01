@@ -33,11 +33,17 @@ export class FlowerGallery extends LitElement {
     private _thumbnailPromises = new Map<string, Promise<string>>();
     private _touchHandler?: TouchHandler;
 
+    private _isChanging = false;
+
     private async _changeImage(direction: 'next' | 'prev' = 'next', pauseSlideshow: boolean = false) {
+        // Prevent multiple simultaneous changes
+        if (this._isChanging) return;
+
+        this._isChanging = true;
         this._isFading = true;
         this.requestUpdate();
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 300)); // Reduced from 500ms
 
         if (direction === 'next') {
             this._currentImageIndex = (this._currentImageIndex + 1) % this.images.length;
@@ -46,6 +52,7 @@ export class FlowerGallery extends LitElement {
         }
 
         this._isFading = false;
+        this._isChanging = false;
         this.requestUpdate();
 
         // Pause slideshow if manually navigating
