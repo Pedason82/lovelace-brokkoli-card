@@ -93,7 +93,7 @@ export class EventUtils {
         // Verwende ausschließlich die Entity-ID aus der Sensor-Map
         if (service.entityPrefix && plant.attributes._sensorMap && plant.attributes._sensorMap[columnId]) {
             const entityId = plant.attributes._sensorMap[columnId];
-            const serviceParams: Record<string, any> = {
+            const serviceParams: Record<string, string | number> = {
                 entity_id: entityId
             };
 
@@ -107,7 +107,7 @@ export class EventUtils {
         } else {
             // Wenn keine Sensor-Map-Eintrag vorhanden ist, verwenden wir die Plant-Entity für Attribute
             // direkt auf der Pflanze
-            const serviceParams: Record<string, any> = {
+            const serviceParams: Record<string, string | number> = {
                 entity_id: plant.entity_id
             };
 

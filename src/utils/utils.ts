@@ -7,16 +7,15 @@ export const getConfigElement = (): HTMLElement => {
     return document.createElement("brokkoli-card-editor");
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 export const getStubConfig = (hass: HomeAssistant) => {
     // There must be an easier way to do this...
     const isPlant = (entity: HomeAssistantEntity | unknown): entity is HomeAssistantEntity => {
         if (typeof entity == 'object' && 'entity_id' in entity && typeof entity.entity_id == 'string' && entity.entity_id.indexOf('plant.') === 0) {
             return !!entity;
         }
+        return false;
     }
-    let supportedEntities: Array<any> = [];
+    let supportedEntities: HomeAssistantEntity[] = [];
     try {
         supportedEntities = Object.values(hass.states).filter(isPlant);
         //    (entity) => entity.entity_id.indexOf('plant.') === 0

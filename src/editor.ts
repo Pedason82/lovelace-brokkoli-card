@@ -7,9 +7,10 @@ import { FormControlType } from "@marcokreeft/ha-editor-formbuilder/dist/interfa
 import { getEntitiesByDomain } from "@marcokreeft/ha-editor-formbuilder/dist/utils/entities";
 import { getEntitiesByDeviceClass } from "@marcokreeft/ha-editor-formbuilder/dist/utils/entities";
 import { EVENT_TYPES } from "./components/history";
+import { HomeAssistant } from 'custom-card-helpers';
 
 // Funktion, um sowohl plant als auch cycle Entitäten zu erhalten
-const getPlantAndCycleEntities = (hass: any) => {
+const getPlantAndCycleEntities = (hass: HomeAssistant) => {
     const plantEntities = getEntitiesByDomain(hass, 'plant');
     const cycleEntities = getEntitiesByDomain(hass, 'cycle');
     return [...plantEntities, ...cycleEntities];

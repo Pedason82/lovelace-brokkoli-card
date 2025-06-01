@@ -3,7 +3,7 @@ import { HomeAssistantEntity } from '../types/brokkoli-list-card-types';
 
 export class PlantEntityUtils {
     // Globaler Cache für Pflanzeninformationen
-    private static _plantInfoCache: Record<string, any> = {};
+    private static _plantInfoCache: Record<string, Record<string, any>> = {};
     
     // Timeouts für die planmäßige Aktualisierung
     private static _plantRetryTimeouts: Record<string, number> = {};
@@ -11,7 +11,7 @@ export class PlantEntityUtils {
     // Zeitpunkt der letzten Aktualisierung pro Pflanze
     private static _plantLastLoaded: Record<string, number> = {};
 
-    static async getPlantInfo(hass: HomeAssistant, plantEntityId: string): Promise<any> {
+    static async getPlantInfo(hass: HomeAssistant, plantEntityId: string): Promise<Record<string, any> | null> {
         // Wenn Daten im Cache sind, verwende diese
         if (this._plantInfoCache[plantEntityId]) {
             return this._plantInfoCache[plantEntityId];
@@ -22,7 +22,7 @@ export class PlantEntityUtils {
     }
     
     // Lädt Pflanzendaten und plant einen regelmäßigen Refresh
-    private static async _loadPlantInfoWithRetry(hass: HomeAssistant, plantEntityId: string): Promise<any> {
+    private static async _loadPlantInfoWithRetry(hass: HomeAssistant, plantEntityId: string): Promise<Record<string, any> | null> {
         try {
             // Aktualisiere den Zeitstempel
             this._plantLastLoaded[plantEntityId] = Date.now();
@@ -122,7 +122,7 @@ export class PlantEntityUtils {
                 }
                 
                 const isPlant = entity.entity_id.startsWith('plant.');
-                const isCycle = entity.entity_id.startsWith('cycle.') && 'member_count' in (entity.attributes as any);
+                const isCycle = entity.entity_id.startsWith('cycle.') && 'member_count' in (entity.attributes as Record<string, any>);
                 
                 if (filter === 'plant') return isPlant;
                 if (filter === 'cycle') return isCycle;
@@ -133,8 +133,8 @@ export class PlantEntityUtils {
     static async updatePlantInfo(
         hass: HomeAssistant,
         plantEntities: HomeAssistantEntity[],
-        plantInfo: Map<string, any>
-    ): Promise<Map<string, any>> {
+        plantInfo: Map<string, Record<string, any> | null>
+    ): Promise<Map<string, Record<string, any> | null>> {
         const updatedPlantInfo = new Map(plantInfo);
         
         // Pflanzen-Entity-IDs ermitteln

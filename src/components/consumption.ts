@@ -5,7 +5,7 @@ import { style } from '../styles/consumption-styles';
 
 declare global {
     interface Window {
-        ApexCharts: any;
+        ApexCharts: new (element: Element, options: Record<string, any>) => any;
     }
 }
 
@@ -47,11 +47,11 @@ const COLOR_CONFIG = {
 export class FlowerConsumption extends LitElement {
     @property() hass?: HomeAssistant;
     @property() entityId?: string;
-    @state() private _charts: Map<string, any> = new Map();
+    @state() private _charts: Map<string, Record<string, any>> = new Map();
     @state() private _selectedPhase: string | null = null;
     @state() private _phaseData: Map<string, PhaseInfo> = new Map();
     @state() private _consumptionData: ConsumptionData | null = null;
-    private _lastOptions: Map<string, any> = new Map();
+    private _lastOptions: Map<string, Record<string, any>> = new Map();
     private _lastPhaseData: Map<string, string> = new Map();
 
     static styles = style;
@@ -158,7 +158,6 @@ export class FlowerConsumption extends LitElement {
         if (!this.hass || !this.entityId) return html``;
 
         const plantName = this.entityId.split('.')[1];
-        const growthPhaseEntity = this.hass.states[`select.${plantName}_growth_phase`];
 
         // Formatierungsfunktion für die Werte
         const formatValue = (value: number | string, decimals: number = 1): string => {
@@ -325,7 +324,7 @@ export class FlowerConsumption extends LitElement {
         return Math.max(0, Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
     }
 
-    private _getPhaseDataString(growthPhaseEntity: any): string {
+    private _getPhaseDataString(growthPhaseEntity: Record<string, any>): string {
         if (!growthPhaseEntity) return '';
         
         return JSON.stringify({
@@ -454,7 +453,7 @@ export class FlowerConsumption extends LitElement {
                     }
                 },
                 events: {
-                    dataPointSelection: (event: any, chartContext: any, config: any) => {
+                    dataPointSelection: (_: unknown, chartContext: Record<string, any>, config: Record<string, any>) => {
                         // Wenn das gleiche Segment nochmal geklickt wird oder außerhalb geklickt wird
                         if (config.selectedDataPoints[0].length === 0 || 
                             (this._selectedPhase === labels[config.dataPointIndex] && config.selectedDataPoints[0].length === 1)) {
@@ -496,7 +495,7 @@ export class FlowerConsumption extends LitElement {
                 textAnchor: 'start',
                 distributed: true,
                 color: 'var(--primary-text-color)',
-                formatter: function(val: number, opts: any) {
+                formatter: function(val: number, opts: Record<string, any>) {
                     const days = opts.w.globals.series[opts.seriesIndex];
                     const label = opts.w.globals.labels[opts.seriesIndex];
                     
@@ -647,7 +646,7 @@ export class FlowerConsumption extends LitElement {
         await loadPromise;
     }
 
-    updated(changedProps: Map<string, any>) {
+    updated(changedProps: Map<string, unknown>) {
         super.updated(changedProps);
         
         if (this.entityId && this.hass) {

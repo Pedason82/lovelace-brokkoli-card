@@ -20,7 +20,7 @@ export class FlowerGallery extends LitElement {
     @state() private _showMainImageFlyout = false;
     private _imageRotationInterval?: NodeJS.Timeout;
     private _reparentedToBody: boolean = false;
-    private _plantInfo: any = null;
+    private _plantInfo: Record<string, any> | null = null;
     private _isLoading: boolean = false;
     private _imagesList: Array<{url: string, date: Date}> = [];
     private _isImagesLoading: boolean = false;
@@ -274,7 +274,7 @@ export class FlowerGallery extends LitElement {
         return new Date(`${year}-${month}-${day}T${hour}:${minute}:00`);
     }
 
-    public static async getImagesWithDates(hass: HomeAssistant, entityId: string, plantInfo?: any): Promise<Array<{url: string, date: Date}>> {
+    public static async getImagesWithDates(hass: HomeAssistant, entityId: string, plantInfo?: Record<string, any>): Promise<Array<{url: string, date: Date}>> {
         const plantEntity = hass.states[entityId];
         if (!plantEntity?.attributes.images) return [];
 
@@ -313,7 +313,7 @@ export class FlowerGallery extends LitElement {
         return images.sort((a, b) => a.date.getTime() - b.date.getTime());
     }
 
-    private static async getFirstPhaseDate(hass: HomeAssistant, entityId: string, plantInfo?: any): Promise<Date | null> {
+    private static async getFirstPhaseDate(hass: HomeAssistant, entityId: string, plantInfo?: Record<string, any>): Promise<Date | null> {
         // Wenn plantInfo übergeben wurde, verwende es direkt
         if (plantInfo) {
             if (!plantInfo?.helpers?.growth_phase?.entity_id) return null;

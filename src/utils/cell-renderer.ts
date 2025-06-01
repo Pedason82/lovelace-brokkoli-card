@@ -196,7 +196,7 @@ export class CellRenderer {
         }
     }
 
-    private static getNumberInputUnit(columnId: string, entity?: any): string {
+    private static getNumberInputUnit(columnId: string, entity?: Record<string, any>): string {
         return columnId === 'flowering_duration' ? 'Tage' : 
                columnId === 'pot_size' ? 'L' : 
                entity?.attributes.unit_of_measurement || '';
