@@ -250,3 +250,4 @@ All three cards can communicate with each other when configured with matching id
 1. Set an `identifier` in the Brokkoli Area Card or Brokkoli List Card
 2. Set `listen_to` in the Brokkoli Card to the same value
 3. When you now select a plant in the Area or List Card, the Brokkoli Card will automatically update
+# Test commit to trigger CI
