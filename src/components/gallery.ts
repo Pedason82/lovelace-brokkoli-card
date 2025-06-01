@@ -83,19 +83,22 @@ export class FlowerGallery extends LitElement {
         e.stopPropagation();
         this._isPlaying = !this._isPlaying;
 
-        if (this._isPlaying) {
-            // Start slideshow
-            if (this.images.length > 1) {
-                this._imageRotationInterval = setInterval(() => {
-                    this._changeImage();
-                }, 10000);
-            }
-        } else {
-            // Stop slideshow
-            if (this._imageRotationInterval) {
-                clearInterval(this._imageRotationInterval);
-                this._imageRotationInterval = undefined;
-            }
+        this._updateSlideshow();
+        this.requestUpdate();
+    }
+
+    private _updateSlideshow() {
+        // Clear existing interval
+        if (this._imageRotationInterval) {
+            clearInterval(this._imageRotationInterval);
+            this._imageRotationInterval = undefined;
+        }
+
+        // Start slideshow if playing and we have multiple images
+        if (this._isPlaying && this.images.length > 1) {
+            this._imageRotationInterval = setInterval(() => {
+                this._changeImage();
+            }, 10000);
         }
     }
 
@@ -239,12 +242,15 @@ export class FlowerGallery extends LitElement {
         try {
             // Lade die Bilder mit der bereits geladenen plantInfo
             this._imagesList = await FlowerGallery.getImagesWithDates(this.hass, this.entityId, this._plantInfo);
-            
+
             // Wenn URLs übergeben wurden, verwende diese, ansonsten benutze die geladenen Bilder
             if (this.images.length === 0) {
                 this.images = this._imagesList.map(img => img.url);
             }
-            
+
+            // Update slideshow after images are loaded
+            this._updateSlideshow();
+
             // Nötige Updates auslösen
             this.requestUpdate();
         } catch (err) {
@@ -263,11 +269,8 @@ export class FlowerGallery extends LitElement {
         if (this.initialImageIndex !== undefined) {
             this._currentImageIndex = this.initialImageIndex;
         }
-        if (this.images.length > 1 && this._isPlaying) {
-            this._imageRotationInterval = setInterval(() => {
-                this._changeImage();
-            }, 10000);
-        }
+        // Start slideshow if we already have images
+        this._updateSlideshow();
         // Lade die Pflanzen-Info (und dann die Bilder)
         this._loadPlantInfo();
     }
