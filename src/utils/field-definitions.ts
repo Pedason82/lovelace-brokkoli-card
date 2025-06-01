@@ -57,7 +57,7 @@ const NUMBER_SERVICE: FieldService = {
 
 // Konstanten
 const PHASES = ['samen', 'keimen', 'wurzeln', 'wachstum', 'blüte', 'entfernt', 'geerntet'] as const;
-const SENSOR_FIELDS = ['air_humidity', 'soil_moisture', 'temperature', 'conductivity', 'illuminance', 'dli', 'water_consumption', 'fertilizer_consumption', 'ph'] as const;
+const SENSOR_FIELDS = ['air_humidity', 'soil_moisture', 'temperature', 'conductivity', 'illuminance', 'dli', 'water_consumption', 'fertilizer_consumption', 'power_consumption', 'energy_consumption', 'ph'] as const;
 
 // Helper-Funktionen
 const getEntityState = (hass: HomeAssistant, plant: HomeAssistantEntity, entityType: string, attribute: string): string => {
@@ -348,6 +348,28 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
         getValue: (hass, plant) => getEntityState(hass, plant, 'sensor', 'fertilizer_consumption')
     },
     {
+        id: 'power_consumption',
+        name: 'Stromverbrauch',
+        group: 'sensors',
+        type: 'sensor',
+        clickAction: 'more-info' as ClickAction,
+        unit: 'W',
+        isSensor: true,
+        showStatusBar: true,
+        getValue: (hass, plant) => getEntityState(hass, plant, 'sensor', 'power_consumption')
+    },
+    {
+        id: 'energy_consumption',
+        name: 'Energieverbrauch',
+        group: 'sensors',
+        type: 'sensor',
+        clickAction: 'more-info' as ClickAction,
+        unit: 'kWh',
+        isSensor: true,
+        showStatusBar: true,
+        getValue: (hass, plant) => getEntityState(hass, plant, 'sensor', 'energy_consumption')
+    },
+    {
         id: 'health',
         name: 'Gesundheit',
         group: 'sensors',
@@ -406,6 +428,28 @@ export const FIELD_DEFINITIONS: FieldDefinition[] = [
         isSensor: true,
         showStatusBar: false,
         getValue: (hass, plant) => getEntityState(hass, plant, 'sensor', 'total_fertilizer_consumption')
+    },
+    {
+        id: 'total_power_consumption',
+        name: 'Gesamt Stromverbrauch',
+        group: 'diagnostics',
+        type: 'sensor',
+        clickAction: 'more-info' as ClickAction,
+        unit: 'kWh',
+        isSensor: true,
+        showStatusBar: false,
+        getValue: (hass, plant) => getEntityState(hass, plant, 'sensor', 'total_power_consumption')
+    },
+    {
+        id: 'total_energy_consumption',
+        name: 'Gesamt Energieverbrauch',
+        group: 'diagnostics',
+        type: 'sensor',
+        clickAction: 'more-info' as ClickAction,
+        unit: 'kWh',
+        isSensor: true,
+        showStatusBar: false,
+        getValue: (hass, plant) => getEntityState(hass, plant, 'sensor', 'total_energy_consumption')
     },
 
     // Min/Max group

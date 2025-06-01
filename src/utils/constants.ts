@@ -14,6 +14,7 @@ export const default_show_bars = [
     "fertilizer_consumption",
     "ppfd",
     "power_consumption",
+    "energy_consumption",
     "ph",
     "health"
 ];
@@ -53,6 +54,7 @@ export const plantAttributes : DropdownOption[] = [
   { label: 'Fertilizer Consumption', value: 'fertilizer_consumption' },
   { label: 'PPFD', value: 'ppfd' },
   { label: 'Power Consumption', value: 'power_consumption' },
+  { label: 'Energy Consumption', value: 'energy_consumption' },
   { label: 'pH', value: 'ph' },
   { label: 'Health', value: 'health' }
 ];
