@@ -91,7 +91,7 @@ export class FlowerHistory extends LitElement {
         if (!this.entityId || !this.hass) return null;
         
         // Verwende PlantEntityUtils, um die Pflanzen-Info zu holen
-        let plantInfo: any;
+        let plantInfo: Record<string, any> | null;
         try {
             plantInfo = await PlantEntityUtils.getPlantInfo(this.hass, this.entityId);
         } catch (err) {
@@ -142,7 +142,7 @@ export class FlowerHistory extends LitElement {
         if (!plantEntity) return [];
         
         // Verwende PlantEntityUtils, um die Pflanzen-Info zu holen
-        let plantInfo: any;
+        let plantInfo: Record<string, any> | null;
         try {
             plantInfo = await PlantEntityUtils.getPlantInfo(this.hass, `plant.${plantName}`);
         } catch (err) {

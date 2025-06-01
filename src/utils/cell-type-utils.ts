@@ -46,7 +46,7 @@ export class CellTypeUtils {
         return getFieldType(columnId) === 'textarea';
     }
 
-    static getCycleOptions(hass: HomeAssistant, plant: any): string[] {
+    static getCycleOptions(hass: HomeAssistant, plant: HomeAssistantEntity): string[] {
         // Verwende ausschließlich die Sensor-Map
         if (plant.attributes?._sensorMap && plant.attributes._sensorMap['cycle']) {
             const entityId = plant.attributes._sensorMap['cycle'];
@@ -58,7 +58,7 @@ export class CellTypeUtils {
         return [];
     }
 
-    static getGrowthPhaseOptions(hass: HomeAssistant, plant: any): string[] {
+    static getGrowthPhaseOptions(hass: HomeAssistant, plant: HomeAssistantEntity): string[] {
         // Verwende ausschließlich die Sensor-Map
         if (plant.attributes?._sensorMap && plant.attributes._sensorMap['growth_phase']) {
             const entityId = plant.attributes._sensorMap['growth_phase'];

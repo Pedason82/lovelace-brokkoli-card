@@ -18,7 +18,7 @@ interface WebSocketResponse {
     entity_id?: string;
     device_id?: string;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Prüfen, ob das Element bereits definiert ist
@@ -41,12 +41,12 @@ class PlantCreateDialogClass extends LitElement {
     if (!this.hass) return;
 
     const formData = new FormData(e.target as HTMLFormElement);
-    const data: Record<string, any> = {};
+    const data: Record<string, string> = {};
 
     // Formularfelder in Daten konvertieren
     formData.forEach((value, key) => {
       if (value !== '') {
-        data[key] = value;
+        data[key] = value.toString();
       }
     });
 

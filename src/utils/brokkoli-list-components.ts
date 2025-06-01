@@ -1,6 +1,6 @@
 import { html, HTMLTemplateResult } from 'lit';
 import { HomeAssistant } from 'custom-card-helpers';
-import { HomeAssistantEntity } from '../types/brokkoli-list-card-types';
+import { HomeAssistantEntity, BrokkoliListCardConfig } from '../types/brokkoli-list-card-types';
 import { FilterState } from './filter-utils';
 import { SensorUtils } from './sensor-utils';
 import { FilterUtils } from './filter-utils';
@@ -17,7 +17,7 @@ export class BrokkoliListComponents {
     }
 
     static renderToolbar(
-        config: any,
+        config: BrokkoliListCardConfig,
         searchQuery: string,
         filterMode: boolean,
         multiSelectMode: boolean,

@@ -1,8 +1,6 @@
-// import { HomeAssistant } from "custom-card-helpers";
 import { DisplayType, DisplayedAttribute, DisplayedAttributes, Icons, Limits, UOM, UOMT } from "../types/brokkoli-card-types";
 import { TemplateResult, html } from "lit";
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import BrokkoliCard from "../brokkoli-card";
 import { default_show_bars } from "./constants";
 import { moreInfo } from "./utils";
