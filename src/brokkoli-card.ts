@@ -41,8 +41,7 @@ export default class BrokkoliCard extends LitElement {
     @state() private _expandedOrder: string[] = [];
     @state() private _showGallery = false;
     @state() private _currentImageIndex = 0;
-    @state() private _nextImageIndex = 1;
-    @state() private _isFading = false;
+    // Removed _nextImageIndex and _isFading as slideshow is disabled on card overview
     @state() private _activePopup: string | null = null;
     @state() private _showFlyoutMenu = false;
     @state() private _popupData: any = {};
@@ -77,11 +76,11 @@ export default class BrokkoliCard extends LitElement {
 
     connectedCallback() {
         super.connectedCallback();
-        this._startImageRotation();
-        
+        // Removed automatic image rotation from card overview
+
         // Event-Listener für Cycle-Member-Wechsel hinzufügen
         window.addEventListener('brokkoli-card-cycle-member-selected', this._handleCycleMemberSelected);
-        
+
         // Event-Listener für Card-Selection hinzufügen
         window.addEventListener('brokkoli-card-entity-selected', this._handleCardEntitySelected);
     }
@@ -259,10 +258,8 @@ export default class BrokkoliCard extends LitElement {
                 </div>
                 ${this._showFlyoutMenu ? this._renderFlyoutMenu() : ''}
                 <div class="image-container">
-                    <img class="back-image" 
-                         src="${this._imageUrls[this._nextImageIndex] || this._imageUrls[this._currentImageIndex] || missingImage}">
-                    <img class="front-image ${this._isFading ? 'fade' : ''}" 
-                         src="${this._imageUrls[this._currentImageIndex] || missingImage}" 
+                    <img class="plant-image"
+                         src="${this._imageUrls[this._currentImageIndex] || missingImage}"
                          @click="${() => this._showGallery = true}">
                 </div>
                 <span id="name" @click="${() => moreInfo(this, this.stateObj.entity_id)}"> ${this.stateObj.attributes.friendly_name
@@ -1213,19 +1210,15 @@ export default class BrokkoliCard extends LitElement {
                 
                 // Setze den Bildindex zurück, wenn eine neue Pflanze geladen wird
                 this._currentImageIndex = 0;
-                this._nextImageIndex = this._imageUrls.length > 1 ? 1 : 0;
-                this._isFading = false;
             } else {
                 // Wenn keine Bilder vorhanden sind, leere die URL-Liste
                 this._imageUrls = [];
                 this._currentImageIndex = 0;
-                this._nextImageIndex = 0;
             }
         } catch (_) {
             this.plantinfo = { result: {} };
             this._imageUrls = [];
             this._currentImageIndex = 0;
-            this._nextImageIndex = 0;
         }
     }
 
@@ -1237,38 +1230,7 @@ export default class BrokkoliCard extends LitElement {
         return style;
     }
 
-    private async _changeImage() {
-        if (this._imageUrls.length <= 1) return;
-
-        this._nextImageIndex = (this._currentImageIndex + 1) % this._imageUrls.length;
-        
-        const img = new Image();
-        img.src = this._imageUrls[this._nextImageIndex];
-        
-        await new Promise((resolve) => {
-            img.onload = resolve;
-            img.onerror = resolve;
-        });
-
-        this._isFading = true;
-        this.requestUpdate();
-
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        this._currentImageIndex = this._nextImageIndex;
-        
-        this._isFading = false;
-        this.requestUpdate();
-    }
-
-    private _startImageRotation() {
-        if (this._imageRotationInterval) {
-            clearInterval(this._imageRotationInterval);
-        }
-        this._imageRotationInterval = setInterval(() => {
-            this._changeImage();
-        }, 10000);
-    }
+    // Slideshow methods removed - slideshow functionality moved to gallery only
 
     // Handler für den Cycle-Member-Wechsel-Event
     private _handleCycleMemberSelected = (event: CustomEvent) => {

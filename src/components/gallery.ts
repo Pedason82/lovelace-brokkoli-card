@@ -18,6 +18,7 @@ export class FlowerGallery extends LitElement {
     @state() private _showFlyout = false;
     @state() private _showDeleteFlyout = false;
     @state() private _showMainImageFlyout = false;
+    @state() private _isPlaying = true;
     private _imageRotationInterval?: NodeJS.Timeout;
     private _reparentedToBody: boolean = false;
     private _plantInfo: Record<string, any> | null = null;
@@ -75,6 +76,27 @@ export class FlowerGallery extends LitElement {
         e.preventDefault();
         e.stopPropagation();
         this._showMainImageFlyout = !this._showMainImageFlyout;
+    }
+
+    private _togglePlayPause(e: Event) {
+        e.preventDefault();
+        e.stopPropagation();
+        this._isPlaying = !this._isPlaying;
+
+        if (this._isPlaying) {
+            // Start slideshow
+            if (this.images.length > 1) {
+                this._imageRotationInterval = setInterval(() => {
+                    this._changeImage();
+                }, 10000);
+            }
+        } else {
+            // Stop slideshow
+            if (this._imageRotationInterval) {
+                clearInterval(this._imageRotationInterval);
+                this._imageRotationInterval = undefined;
+            }
+        }
     }
 
     private async _handleFileUpload(e: Event) {
@@ -241,7 +263,7 @@ export class FlowerGallery extends LitElement {
         if (this.initialImageIndex !== undefined) {
             this._currentImageIndex = this.initialImageIndex;
         }
-        if (this.images.length > 1) {
+        if (this.images.length > 1 && this._isPlaying) {
             this._imageRotationInterval = setInterval(() => {
                 this._changeImage();
             }, 10000);
@@ -687,6 +709,15 @@ export class FlowerGallery extends LitElement {
                                         </ha-icon-button>
                                     </div>
                                 </div>
+                            ` : ''}
+                            ${this.images.length > 1 ? html`
+                                <ha-icon-button
+                                    @click="${this._togglePlayPause}"
+                                    .label="${this._isPlaying ? 'Slideshow pausieren' : 'Slideshow starten'}"
+                                    class="play-pause-button"
+                                >
+                                    <ha-icon icon="${this._isPlaying ? 'mdi:pause' : 'mdi:play'}"></ha-icon>
+                                </ha-icon-button>
                             ` : ''}
                             <ha-icon-button
                                 @click="${this._close}"

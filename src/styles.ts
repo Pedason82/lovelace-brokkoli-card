@@ -279,6 +279,19 @@ export const style = css`
   }
 
   /* Header Image */
+  .image-container .plant-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: var(--ha-card-box-shadow, 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2));
+    cursor: pointer;
+  }
+
+  /* Legacy support for back-image and front-image classes (for compiled JS) */
   .image-container .back-image,
   .image-container .front-image {
     position: absolute;
