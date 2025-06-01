@@ -688,7 +688,8 @@ export default class BrokkoliCard extends LitElement {
             { key: 'illuminance', label: 'Beleuchtungssensor', icon: 'mdi:brightness-5' },
             { key: 'humidity', label: 'Luftfeuchtigkeitssensor', icon: 'mdi:water' },
             { key: 'conductivity', label: 'Leitfähigkeitssensor', icon: 'mdi:flash' },
-            { key: 'power_consumption', label: 'Stromverbrauchssensor', icon: 'mdi:power-plug' }
+            { key: 'power_consumption', label: 'Stromverbrauchssensor (W)', icon: 'mdi:flash' },
+            { key: 'energy_consumption', label: 'Energieverbrauchssensor (kWh)', icon: 'mdi:lightning-bolt-outline' }
         ];
 
         // Filtere alle verfügbaren Sensoren nach Typ
@@ -730,11 +731,12 @@ export default class BrokkoliCard extends LitElement {
                         case 'conductivity':
                             return unit === 'µS/cm' || unit === 'mS/cm';
                         case 'power_consumption':
-                            return deviceClass === 'power' || 
-                                   deviceClass === 'energy' || 
-                                   unit === 'W' || 
-                                   unit === 'kW' || 
-                                   unit === 'kWh' || 
+                            return deviceClass === 'power' ||
+                                   unit === 'W' ||
+                                   unit === 'kW';
+                        case 'energy_consumption':
+                            return deviceClass === 'energy' ||
+                                   unit === 'kWh' ||
                                    unit === 'Wh';
                         default:
                             return false;
