@@ -43,7 +43,7 @@ export class FlowerGallery extends LitElement {
         this._isFading = true;
         this.requestUpdate();
 
-        await new Promise(resolve => setTimeout(resolve, 300)); // Reduced from 500ms
+        await new Promise(resolve => setTimeout(resolve, 500)); // Back to 500ms for smoother transitions
 
         if (direction === 'next') {
             this._currentImageIndex = (this._currentImageIndex + 1) % this.images.length;
@@ -247,7 +247,7 @@ export class FlowerGallery extends LitElement {
         if (this._isPlaying && this.images.length > 1) {
             this._imageRotationInterval = setInterval(() => {
                 this._changeImage();
-            }, 10000);
+            }, 3000);
         }
     }
 
