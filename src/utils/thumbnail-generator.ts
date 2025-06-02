@@ -167,20 +167,24 @@ export class ThumbnailGenerator {
      * Draw standard thumbnail with aspect ratio preservation
      */
     private static _drawStandardThumbnail(img: HTMLImageElement, width: number, height: number): void {
-        // Original logic for non-square thumbnails
-        const aspectRatio = img.width / img.height;
-        let drawWidth = width;
-        let drawHeight = height;
+        // Calculate scaling to fit within bounds while preserving aspect ratio
+        const imgAspectRatio = img.width / img.height;
+        const targetAspectRatio = width / height;
+
+        let drawWidth: number;
+        let drawHeight: number;
         let offsetX = 0;
         let offsetY = 0;
 
-        if (aspectRatio > 1) {
-            // Landscape image
-            drawHeight = width / aspectRatio;
+        if (imgAspectRatio > targetAspectRatio) {
+            // Image is wider than target - fit to width
+            drawWidth = width;
+            drawHeight = width / imgAspectRatio;
             offsetY = (height - drawHeight) / 2;
         } else {
-            // Portrait image
-            drawWidth = height * aspectRatio;
+            // Image is taller than target - fit to height
+            drawHeight = height;
+            drawWidth = height * imgAspectRatio;
             offsetX = (width - drawWidth) / 2;
         }
 
@@ -228,6 +232,44 @@ export function generateMobileThumbnail(imageUrl: string): Promise<string> {
         width: size,
         height: size,  // Same as width for perfect squares
         quality: isMobile ? 0.7 : 0.8,
+        format: 'jpeg'
+    });
+}
+
+/**
+ * Utility function for gallery-optimized images
+ * Creates medium-quality images for fast gallery viewing while preserving originals
+ */
+export function generateGalleryImage(imageUrl: string): Promise<string> {
+    // Responsive gallery image sizes
+    const isMobile = window.innerWidth <= 768;
+    const isSmallMobile = window.innerWidth <= 480;
+
+    let maxWidth: number;
+    let maxHeight: number;
+    let quality: number;
+
+    if (isSmallMobile) {
+        // Small mobile - optimize heavily for performance
+        maxWidth = 800;
+        maxHeight = 600;
+        quality = 0.75;
+    } else if (isMobile) {
+        // Tablet - balance quality and performance
+        maxWidth = 1024;
+        maxHeight = 768;
+        quality = 0.8;
+    } else {
+        // Desktop - higher quality but still optimized
+        maxWidth = 1280;
+        maxHeight = 720;
+        quality = 0.85;
+    }
+
+    return ThumbnailGenerator.generateThumbnail(imageUrl, {
+        width: maxWidth,
+        height: maxHeight,
+        quality: quality,
         format: 'jpeg'
     });
 }

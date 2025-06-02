@@ -5,7 +5,7 @@ import { HomeAssistant } from 'custom-card-helpers';
 import { galleryStyles } from '../styles/gallery-styles';
 import { PlantEntityUtils } from '../utils/plant-entity-utils';
 import { ImageCacheManager } from '../utils/image-cache';
-import { ThumbnailGenerator, generateMobileThumbnail } from '../utils/thumbnail-generator';
+import { ThumbnailGenerator, generateMobileThumbnail, generateGalleryImage } from '../utils/thumbnail-generator';
 import { TouchHandler, createGalleryTouchHandler } from '../utils/touch-handler';
 
 // Klasse definieren ohne customElement-Decorator
@@ -21,6 +21,7 @@ export class FlowerGallery extends LitElement {
     @state() private _showActionsFlyout = false;
     @state() private _isPlaying = false;
     @state() private _thumbnailUrls = new Map<string, string>();
+    @state() private _galleryImageUrls = new Map<string, string>();
     private _imageRotationInterval?: NodeJS.Timeout;
     private _reparentedToBody: boolean = false;
     private _plantInfo: Record<string, any> | null = null;
@@ -31,6 +32,8 @@ export class FlowerGallery extends LitElement {
     private _preloadingPromises = new Map<string, Promise<HTMLImageElement>>();
     private _thumbnailCache = new Map<string, string>();
     private _thumbnailPromises = new Map<string, Promise<string>>();
+    private _galleryImageCache = new Map<string, string>();
+    private _galleryImagePromises = new Map<string, Promise<string>>();
     private _touchHandler?: TouchHandler;
 
     private _isChanging = false;
@@ -63,6 +66,9 @@ export class FlowerGallery extends LitElement {
 
         // Trigger preloading after image change
         this._preloadAdjacentImages();
+
+        // Preload gallery images for new current image
+        this._preloadGalleryImages();
 
         // Scroll to active thumbnail
         this._scrollToActiveThumbnail();
@@ -135,6 +141,37 @@ export class FlowerGallery extends LitElement {
     }
 
     /**
+     * Get gallery-optimized image URL for an image, generating if needed
+     */
+    private async _getGalleryImageUrl(originalUrl: string): Promise<string> {
+        if (this._galleryImageCache.has(originalUrl)) {
+            return this._galleryImageCache.get(originalUrl)!;
+        }
+
+        // Return existing promise if already generating
+        if (this._galleryImagePromises.has(originalUrl)) {
+            return this._galleryImagePromises.get(originalUrl)!;
+        }
+
+        // Generate new gallery-optimized image
+        const galleryImagePromise = generateGalleryImage(originalUrl);
+        this._galleryImagePromises.set(originalUrl, galleryImagePromise);
+
+        try {
+            const galleryImageUrl = await galleryImagePromise;
+            this._galleryImageCache.set(originalUrl, galleryImageUrl);
+            this._galleryImageUrls.set(originalUrl, galleryImageUrl);
+            this.requestUpdate(); // Trigger re-render with new gallery image
+            return galleryImageUrl;
+        } catch (error) {
+            console.warn('Failed to generate gallery image, using original:', error);
+            return originalUrl;
+        } finally {
+            this._galleryImagePromises.delete(originalUrl);
+        }
+    }
+
+    /**
      * Preload thumbnails for visible images
      */
     private async _preloadThumbnails(): Promise<void> {
@@ -181,6 +218,53 @@ export class FlowerGallery extends LitElement {
         }
     }
 
+    /**
+     * Preload gallery-optimized images for current and adjacent images
+     */
+    private async _preloadGalleryImages(): Promise<void> {
+        if (this.images.length === 0) return;
+
+        // Generate gallery images for current and adjacent images first
+        const priorityIndices = [];
+        const range = 2; // Current + 2 on each side
+
+        for (let i = -range; i <= range; i++) {
+            const index = (this._currentImageIndex + i + this.images.length) % this.images.length;
+            priorityIndices.push(index);
+        }
+
+        // Generate priority gallery images
+        const priorityPromises = priorityIndices.map(index =>
+            this._getGalleryImageUrl(this.images[index])
+        );
+
+        // Don't wait for all, but start the process
+        Promise.allSettled(priorityPromises).then(() => {
+            // After priority images, generate the rest in background
+            this._generateRemainingGalleryImages();
+        });
+    }
+
+    /**
+     * Generate remaining gallery images in background
+     */
+    private async _generateRemainingGalleryImages(): Promise<void> {
+        const batchSize = 2; // Smaller batch size for larger images
+        const remainingUrls = this.images.filter(url => !this._galleryImageCache.has(url));
+
+        for (let i = 0; i < remainingUrls.length; i += batchSize) {
+            const batch = remainingUrls.slice(i, i + batchSize);
+            const promises = batch.map(url => this._getGalleryImageUrl(url));
+
+            await Promise.allSettled(promises);
+
+            // Longer delay for gallery images to keep UI responsive
+            if (i + batchSize < remainingUrls.length) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+        }
+    }
+
     private async _selectImage(index: number) {
         if (index === this._currentImageIndex) return;
 
@@ -200,6 +284,9 @@ export class FlowerGallery extends LitElement {
 
         // Trigger preloading after image selection
         this._preloadAdjacentImages();
+
+        // Preload gallery images for new current image
+        this._preloadGalleryImages();
 
         // Scroll to active thumbnail
         this._scrollToActiveThumbnail();
@@ -247,7 +334,7 @@ export class FlowerGallery extends LitElement {
         if (this._isPlaying && this.images.length > 1) {
             this._imageRotationInterval = setInterval(() => {
                 this._changeImage();
-            }, 3000);
+            }, 5000);
         }
     }
 
@@ -406,6 +493,9 @@ export class FlowerGallery extends LitElement {
             // Start preloading thumbnails
             this._preloadThumbnails();
 
+            // Start preloading gallery images
+            this._preloadGalleryImages();
+
             // Nötige Updates auslösen
             this.requestUpdate();
         } catch (err) {
@@ -471,6 +561,10 @@ export class FlowerGallery extends LitElement {
         // Cleanup thumbnail cache
         this._thumbnailCache.clear();
         this._thumbnailPromises.clear();
+
+        // Cleanup gallery image cache
+        this._galleryImageCache.clear();
+        this._galleryImagePromises.clear();
     }
 
     static get styles(): CSSResult {
@@ -922,8 +1016,8 @@ export class FlowerGallery extends LitElement {
                                 <ha-icon icon="mdi:chevron-left"></ha-icon>
                             </ha-icon-button>
                             <a href="${this.images[this._currentImageIndex]}" target="_blank">
-                                <img class="gallery-image ${this._isFading ? 'fade' : ''}" 
-                                    src="${this.images[this._currentImageIndex]}"
+                                <img class="gallery-image ${this._isFading ? 'fade' : ''}"
+                                    src="${this._galleryImageUrls.get(this.images[this._currentImageIndex]) || this.images[this._currentImageIndex]}"
                                 >
                             </a>
                             <ha-icon-button
