@@ -29,7 +29,6 @@ interface ConsumptionData {
     ppfd: number;
     fertilizer: number;
     water: number;
-    power: number;
     energy: number;
     cost: number;
 }
@@ -106,7 +105,6 @@ export class FlowerConsumption extends LitElement {
                 `sensor.${plantName}_total_ppfd_mol_integral`,
                 `sensor.${plantName}_total_fertilizer_consumption`,
                 `sensor.${plantName}_total_water_consumption`,
-                `sensor.${plantName}_total_power_consumption`,
                 `sensor.${plantName}_total_energy_consumption`,
                 `sensor.${plantName}_energy_cost`
             ];
@@ -130,9 +128,8 @@ export class FlowerConsumption extends LitElement {
                 ppfd: calculateDiff(results[0] as Array<Array<{state: string; last_changed: string}>>),
                 fertilizer: calculateDiff(results[1] as Array<Array<{state: string; last_changed: string}>>),
                 water: calculateDiff(results[2] as Array<Array<{state: string; last_changed: string}>>),
-                power: calculateDiff(results[3] as Array<Array<{state: string; last_changed: string}>>),
-                energy: calculateDiff(results[4] as Array<Array<{state: string; last_changed: string}>>),
-                cost: calculateDiff(results[5] as Array<Array<{state: string; last_changed: string}>>)
+                energy: calculateDiff(results[3] as Array<Array<{state: string; last_changed: string}>>),
+                cost: calculateDiff(results[4] as Array<Array<{state: string; last_changed: string}>>)
             };
 
             // Trigger Animation für alle Werte
@@ -203,17 +200,7 @@ export class FlowerConsumption extends LitElement {
                         } L</span>
                     </div>
                 </div>
-                <div class="consumption-item" @click="${() => this._showMoreInfo(`sensor.${plantName}_power_consumption`)}">
-                    <ha-icon icon="mdi:flash"></ha-icon>
-                    <div class="consumption-details">
-                        <span class="label">Aktueller Verbrauch</span>
-                        <span class="value consumption-value">${
-                            formatValue(this._consumptionData ?
-                                this._consumptionData.power :
-                                this.hass.states[`sensor.${plantName}_power_consumption`]?.state || 'N/A')
-                        } W</span>
-                    </div>
-                </div>
+
                 <div class="consumption-item" @click="${() => this._showMoreInfo(`sensor.${plantName}_total_energy_consumption`)}">
                     <ha-icon icon="mdi:lightning-bolt-outline"></ha-icon>
                     <div class="consumption-details">
