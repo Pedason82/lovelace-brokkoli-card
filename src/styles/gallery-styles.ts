@@ -117,7 +117,7 @@ export const galleryStyles = css`
     .gallery-image {
         max-width: 100%;
         max-height: 100%;
-        object-fit: contain;
+        object-fit: cover;
         opacity: 1;
         transition: opacity 0.5s ease-in-out;
         cursor: zoom-in;
