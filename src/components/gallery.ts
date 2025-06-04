@@ -29,6 +29,7 @@ export class FlowerGallery extends LitElement {
     private _imagesList: Array<{url: string, date: Date}> = [];
     private _isImagesLoading: boolean = false;
     private _treatmentHistory: Array<{date: Date, treatment: string}> = [];
+    private _debugShown: boolean = false;
     private _imageCache = ImageCacheManager.getInstance();
     private _preloadingPromises = new Map<string, Promise<HTMLImageElement>>();
     private _thumbnailCache = new Map<string, string>();
@@ -960,13 +961,15 @@ export class FlowerGallery extends LitElement {
         // Hole Treatment-Information für das Bilddatum
         const treatmentAtImage = this._getTreatmentForImageDate(imageDate);
 
-        // Debug: Zeige nur für das erste Bild die Datumsinformationen
-        if (this.images.indexOf(url) === 0 && this._treatmentHistory.length > 0) {
+        // Debug: Zeige nur für das erste Bild die Datumsinformationen (einmalig)
+        if (this.images.indexOf(url) === 0 && this._treatmentHistory.length > 0 && !this._debugShown) {
             console.log('[GALLERY] Date comparison debug:', {
                 imageDate: imageDate.toISOString(),
                 latestTreatment: this._treatmentHistory[0].date.toISOString(),
-                treatmentFound: treatmentAtImage
+                treatmentFound: treatmentAtImage,
+                allTreatments: this._treatmentHistory.map(t => ({date: t.date.toISOString(), treatment: t.treatment}))
             });
+            this._debugShown = true;
         }
 
         // Prüfe ob es das erste Bild (entity_picture) ist
