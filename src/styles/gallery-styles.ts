@@ -110,8 +110,8 @@ export const galleryStyles = css`
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 100%;
-        height: 100%;
+        width: 120%;
+        height: 120%;
     }
 
     .gallery-image {
