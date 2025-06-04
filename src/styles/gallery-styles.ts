@@ -63,6 +63,12 @@ export const galleryStyles = css`
         font-weight: bold;
     }
 
+    .gallery-date .treatment {
+        font-weight: bold;
+        color: var(--accent-color, #ff9800);
+        font-style: italic;
+    }
+
     .gallery-date .bracket {
         font-weight: normal;
     }
@@ -115,8 +121,8 @@ export const galleryStyles = css`
     }
 
     .gallery-image {
-        width: 150%;
-        height: 150%;
+        max-width: 100%;
+        max-height: 100%;
         object-fit: contain;
         opacity: 1;
         transition: opacity 0.5s ease-in-out;
@@ -235,6 +241,15 @@ export const galleryStyles = css`
         padding: 1px 6px;
         border-radius: 3px;
         white-space: nowrap;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .thumbnail-treatment {
+        font-size: 0.7em;
+        color: var(--accent-color, #ff9800);
+        font-style: italic;
+        font-weight: bold;
     }
 
     .thumbnail-container:hover {

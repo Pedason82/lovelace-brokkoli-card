@@ -28,6 +28,7 @@ export class FlowerGallery extends LitElement {
     private _isLoading: boolean = false;
     private _imagesList: Array<{url: string, date: Date}> = [];
     private _isImagesLoading: boolean = false;
+    private _treatmentHistory: Array<{date: Date, treatment: string}> = [];
     private _imageCache = ImageCacheManager.getInstance();
     private _preloadingPromises = new Map<string, Promise<HTMLImageElement>>();
     private _thumbnailCache = new Map<string, string>();
@@ -479,6 +480,9 @@ export class FlowerGallery extends LitElement {
             // Lade die Bilder mit der bereits geladenen plantInfo
             this._imagesList = await FlowerGallery.getImagesWithDates(this.hass, this.entityId, this._plantInfo);
 
+            // Lade die Treatment-Historie
+            await this._loadTreatmentHistory();
+
             // Wenn URLs übergeben wurden, verwende diese, ansonsten benutze die geladenen Bilder
             if (this.images.length === 0) {
                 this.images = this._imagesList.map(img => img.url);
@@ -667,7 +671,72 @@ export class FlowerGallery extends LitElement {
         }
     }
 
-    private _getGroupedImages(): Array<{phase: string, images: Array<{url: string, day: number, totalDays: number}>, color: string}> {
+    private async _loadTreatmentHistory(): Promise<void> {
+        if (!this.entityId || !this.hass || !this._plantInfo) return;
+
+        // Hole die treatment Entity-ID aus der plantInfo
+        if (!this._plantInfo?.helpers?.treatment?.entity_id) {
+            this._treatmentHistory = [];
+            return;
+        }
+
+        const treatmentEntityId = this._plantInfo.helpers.treatment.entity_id;
+
+        try {
+            // Bestimme den Zeitraum für die Historie (vom ersten Bild bis jetzt)
+            const startTime = this._imagesList.length > 0
+                ? this._imagesList[0].date.toISOString()
+                : new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 Jahr zurück als Fallback
+            const endTime = new Date().toISOString();
+
+            // Lade Treatment-Historie von Home Assistant
+            const response = await this.hass.callApi('GET',
+                `history/period/${startTime}?filter_entity_id=${treatmentEntityId}&end_time=${endTime}`
+            );
+
+            if (response && Array.isArray(response) && response.length > 0) {
+                const history = response[0];
+                this._treatmentHistory = [];
+
+                for (let i = 0; i < history.length; i++) {
+                    const state = history[i];
+                    if (state.state &&
+                        state.state !== 'unavailable' &&
+                        state.state !== 'unknown' &&
+                        state.state !== 'none' &&
+                        state.state.trim() !== '') {
+                        this._treatmentHistory.push({
+                            date: new Date(state.last_changed),
+                            treatment: state.state
+                        });
+                    }
+                }
+
+                // Sortiere nach Datum (neueste zuerst)
+                this._treatmentHistory.sort((a, b) => b.date.getTime() - a.date.getTime());
+            } else {
+                this._treatmentHistory = [];
+            }
+        } catch (error) {
+            console.warn('Fehler beim Laden der Treatment-Historie:', error);
+            this._treatmentHistory = [];
+        }
+    }
+
+    private _getTreatmentForImageDate(imageDate: Date): string {
+        if (!this._treatmentHistory || this._treatmentHistory.length === 0) return '';
+
+        // Finde das neueste Treatment vor oder am Bilddatum
+        for (const treatment of this._treatmentHistory) {
+            if (treatment.date <= imageDate) {
+                return treatment.treatment;
+            }
+        }
+
+        return '';
+    }
+
+    private _getGroupedImages(): Array<{phase: string, images: Array<{url: string, day: number, totalDays: number, treatment?: string}>, color: string}> {
         if (!this.entityId || !this.hass || !this._plantInfo) return [];
 
         // Hole die growth_phase Entity-ID aus der plantInfo
@@ -691,9 +760,9 @@ export class FlowerGallery extends LitElement {
             'entfernt': 'Entfernt'
         };
 
-        const groupedImages: Array<{phase: string, images: Array<{url: string, day: number, totalDays: number}>, color: string}> = [];
+        const groupedImages: Array<{phase: string, images: Array<{url: string, day: number, totalDays: number, treatment?: string}>, color: string}> = [];
         let currentPhase = '';
-        let currentImages: Array<{url: string, day: number, totalDays: number}> = [];
+        let currentImages: Array<{url: string, day: number, totalDays: number, treatment?: string}> = [];
 
         // Sammle aktive Phasen
         const activePhases = phases.filter(phase => {
@@ -736,6 +805,9 @@ export class FlowerGallery extends LitElement {
             // Berechne Gesamtalter
             totalDays = Math.floor((imageDate.getTime() - firstPhaseDate.getTime()) / (1000 * 60 * 60 * 24));
 
+            // Hole Treatment-Information für das Bilddatum
+            const treatmentAtImage = this._getTreatmentForImageDate(imageDate);
+
             if (imagePhase) {
                 // Wenn sich die Phase ändert, erstelle eine neue Gruppe
                 if (imagePhase !== currentPhase) {
@@ -767,7 +839,8 @@ export class FlowerGallery extends LitElement {
                 currentImages.push({
                     url,
                     day: daysInPhase + 1,
-                    totalDays: totalDays + 1
+                    totalDays: totalDays + 1,
+                    treatment: treatmentAtImage
                 });
             }
         });
@@ -866,17 +939,26 @@ export class FlowerGallery extends LitElement {
             totalAge = Math.floor((imageDate.getTime() - firstPhaseDate.getTime()) / (1000 * 60 * 60 * 24));
         }
 
+        // Hole Treatment-Information für das Bilddatum
+        const treatmentAtImage = this._getTreatmentForImageDate(imageDate);
+
         // Prüfe ob es das erste Bild (entity_picture) ist
         if (this.images.indexOf(url) === 0) {
             // Hauptbild benutzt "Tag 1" anstatt berechnete Tage
             let info = `<div class="date-line">${dateStr}</div>`;
             info += `<div class="info-line">Tag 1 <span class="phase">${phaseAtImage}</span>/1 Total</div>`;
+            if (treatmentAtImage) {
+                info += `<div class="info-line"><span class="treatment">${treatmentAtImage}</span></div>`;
+            }
             return info;
         }
 
         // Formatiere die Ausgabe
         let info = `<div class="date-line">${dateStr}</div>`;
         info += `<div class="info-line">Tag ${daysInPhase + 1} <span class="phase">${phaseAtImage}</span>/${totalAge + 1} Total</div>`;
+        if (treatmentAtImage) {
+            info += `<div class="info-line"><span class="treatment">${treatmentAtImage}</span></div>`;
+        }
 
         return info;
     }
@@ -1039,7 +1121,10 @@ export class FlowerGallery extends LitElement {
                                             ${group.images.map(image => html`
                                                 <div class="thumbnail-container ${this.images[this._currentImageIndex] === image.url ? 'active' : ''}"
                                                      @click="${() => this._selectImage(this.images.indexOf(image.url))}">
-                                                    <div class="thumbnail-day">Tag ${image.day}/${image.totalDays}</div>
+                                                    <div class="thumbnail-day">
+                                                        Tag ${image.day}/${image.totalDays}
+                                                        ${image.treatment ? html`<br><span class="thumbnail-treatment">${image.treatment}</span>` : ''}
+                                                    </div>
                                                     <img class="thumbnail" src="${this._thumbnailUrls.get(image.url) || image.url}">
                                                 </div>
                                             `)}
