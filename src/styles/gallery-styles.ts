@@ -252,6 +252,119 @@ export const galleryStyles = css`
         font-weight: bold;
     }
 
+    /* Treatment Management Styles */
+    .treatment-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .treatment-button {
+        --mdc-icon-button-size: 40px;
+        --mdc-icon-size: 20px;
+    }
+
+    .treatment-panel {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--card-background-color);
+        border: 1px solid var(--divider-color);
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: var(--ha-card-box-shadow, 0 2px 2px 0 rgba(0, 0, 0, 0.14));
+        z-index: 1000;
+        min-width: 250px;
+        margin-top: 4px;
+    }
+
+    .treatment-section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .treatment-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .treatment-section label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--primary-text-color);
+    }
+
+    .treatment-input, .treatment-select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--divider-color);
+        border-radius: 4px;
+        background: var(--card-background-color);
+        color: var(--primary-text-color);
+        font-size: 14px;
+        font-family: inherit;
+    }
+
+    .treatment-input {
+        cursor: text;
+    }
+
+    .treatment-select {
+        cursor: pointer;
+    }
+
+    .treatment-input:focus, .treatment-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+
+    .treatment-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+    .add-btn {
+        background: var(--primary-color);
+        color: var(--text-primary-color);
+    }
+
+    .add-btn:hover:not(:disabled) {
+        background: var(--primary-color);
+        opacity: 0.8;
+    }
+
+    .apply-btn {
+        background: var(--success-color, #4caf50);
+        color: white;
+    }
+
+    .apply-btn:hover:not(:disabled) {
+        background: var(--success-color, #4caf50);
+        opacity: 0.8;
+    }
+
+    .remove-btn {
+        background: var(--error-color);
+        color: white;
+    }
+
+    .remove-btn:hover:not(:disabled) {
+        background: var(--error-color);
+        opacity: 0.8;
+    }
+
+    .treatment-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
     .thumbnail-container:hover {
         border-color: rgba(255, 255, 255, 0.5);
     }

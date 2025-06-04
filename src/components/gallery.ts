@@ -19,9 +19,13 @@ export class FlowerGallery extends LitElement {
     @state() private _currentImageIndex = 0;
     @state() private _isFading = false;
     @state() private _showActionsFlyout = false;
+    @state() private _showTreatmentPanel = false;
     @state() private _isPlaying = false;
     @state() private _thumbnailUrls = new Map<string, string>();
     @state() private _galleryImageUrls = new Map<string, string>();
+    @state() private _customTreatmentName = '';
+    @state() private _selectedTreatment = '';
+    @state() private _applyTreatment = '';
     private _imageRotationInterval?: NodeJS.Timeout;
     private _reparentedToBody: boolean = false;
     private _plantInfo: Record<string, any> | null = null;
@@ -977,6 +981,118 @@ export class FlowerGallery extends LitElement {
         return info;
     }
 
+    // Treatment Management Methods
+    private _getTreatmentOptions(): string[] {
+        if (!this.entityId || !this.hass) {
+            return ['cut', 'super cropping', 'topping', 'lollipop', 'fim', 'rib', 'spray pest', 'spray water'];
+        }
+
+        // Find the treatment select entity for this plant
+        const treatmentEntityId = `select.${this.entityId.split('.')[1]}_treatment`;
+        const treatmentEntity = this.hass.states[treatmentEntityId];
+
+        if (treatmentEntity && treatmentEntity.attributes && treatmentEntity.attributes.options) {
+            // Return dynamic options from the backend entity (excluding empty option)
+            return treatmentEntity.attributes.options.filter((option: string) => option !== '');
+        }
+
+        // Fallback to hardcoded options if entity not found or no options available
+        return ['cut', 'super cropping', 'topping', 'lollipop', 'fim', 'rib', 'spray pest', 'spray water'];
+    }
+
+    private _toggleTreatmentPanel(e: Event) {
+        e.preventDefault();
+        e.stopPropagation();
+        this._showTreatmentPanel = !this._showTreatmentPanel;
+        this.requestUpdate();
+    }
+
+    private _handleCustomTreatmentInput(e: Event) {
+        const input = e.target as HTMLInputElement;
+        this._customTreatmentName = input.value;
+        this.requestUpdate();
+    }
+
+    private _handleApplyTreatmentSelect(e: Event) {
+        const select = e.target as HTMLSelectElement;
+        this._applyTreatment = select.value;
+        this.requestUpdate();
+    }
+
+    private _handleRemoveTreatmentSelect(e: Event) {
+        const select = e.target as HTMLSelectElement;
+        this._selectedTreatment = select.value;
+        this.requestUpdate();
+    }
+
+    private async _addCustomTreatment(e: Event) {
+        e.preventDefault();
+        const treatmentName = this._customTreatmentName.trim();
+
+        if (!this.hass || !this.entityId || !treatmentName) {
+            return;
+        }
+
+        try {
+            await this.hass.callService('plant', 'add_custom_treatment', {
+                entity_id: this.entityId,
+                treatment_name: treatmentName
+            });
+
+            this._customTreatmentName = '';
+            this.requestUpdate();
+        } catch (error) {
+            console.error('Error adding treatment:', error);
+        }
+    }
+
+    private async _applyTreatmentToday(e: Event) {
+        e.preventDefault();
+
+        if (!this.hass || !this.entityId || !this._applyTreatment) {
+            return;
+        }
+
+        try {
+            // Get the treatment entity ID
+            const treatmentEntityId = `select.${this.entityId.split('.')[1]}_treatment`;
+
+            // Set the treatment option - this will create a history entry
+            await this.hass.callService('select', 'select_option', {
+                entity_id: treatmentEntityId,
+                option: this._applyTreatment
+            });
+
+            this._applyTreatment = '';
+            this.requestUpdate();
+
+            // Reload treatment history to show the new entry
+            await this._loadTreatmentHistory();
+        } catch (error) {
+            console.error('Error applying treatment:', error);
+        }
+    }
+
+    private async _removeCustomTreatment(e: Event) {
+        e.preventDefault();
+
+        if (!this.hass || !this.entityId || !this._selectedTreatment) {
+            return;
+        }
+
+        try {
+            await this.hass.callService('plant', 'remove_custom_treatment', {
+                entity_id: this.entityId,
+                treatment_name: this._selectedTreatment
+            });
+
+            this._selectedTreatment = '';
+            this.requestUpdate();
+        } catch (error) {
+            console.error('Error removing treatment:', error);
+        }
+    }
+
     render(): HTMLTemplateResult {
         return html`
             <div class="gallery-overlay" @click="${this._close}">
@@ -1093,6 +1209,83 @@ export class FlowerGallery extends LitElement {
                                     ` : ''}
                                 </div>
                             </div>
+
+                            <!-- Treatment Management Panel -->
+                            <div class="treatment-container">
+                                <ha-icon-button
+                                    @click="${this._toggleTreatmentPanel}"
+                                    .label=${"Behandlungen verwalten"}
+                                    class="treatment-button"
+                                >
+                                    <ha-icon icon="mdi:content-cut"></ha-icon>
+                                </ha-icon-button>
+
+                                ${this._showTreatmentPanel ? html`
+                                    <div class="treatment-panel">
+                                        <!-- Add Custom Treatment -->
+                                        <div class="treatment-section">
+                                            <label>Neue Behandlung hinzufügen:</label>
+                                            <input
+                                                type="text"
+                                                @input="${this._handleCustomTreatmentInput}"
+                                                .value="${this._customTreatmentName}"
+                                                placeholder="Behandlungsname eingeben..."
+                                                class="treatment-input"
+                                            >
+                                            <button
+                                                @click="${this._addCustomTreatment}"
+                                                ?disabled="${!this._customTreatmentName.trim()}"
+                                                class="treatment-btn add-btn"
+                                            >
+                                                + Hinzufügen
+                                            </button>
+                                        </div>
+
+                                        <!-- Apply Treatment to History -->
+                                        <div class="treatment-section">
+                                            <label>Behandlung heute anwenden:</label>
+                                            <select
+                                                @change="${this._handleApplyTreatmentSelect}"
+                                                class="treatment-select"
+                                            >
+                                                <option value="">Wählen...</option>
+                                                ${this._getTreatmentOptions().map(option =>
+                                                    html`<option value="${option}" ?selected="${this._applyTreatment === option}">${option}</option>`
+                                                )}
+                                            </select>
+                                            <button
+                                                @click="${this._applyTreatmentToday}"
+                                                ?disabled="${!this._applyTreatment}"
+                                                class="treatment-btn apply-btn"
+                                            >
+                                                ✓ Anwenden
+                                            </button>
+                                        </div>
+
+                                        <!-- Remove Custom Treatment -->
+                                        <div class="treatment-section">
+                                            <label>Behandlung entfernen:</label>
+                                            <select
+                                                @change="${this._handleRemoveTreatmentSelect}"
+                                                class="treatment-select"
+                                            >
+                                                <option value="">Wählen...</option>
+                                                ${this._getTreatmentOptions().map(option =>
+                                                    html`<option value="${option}" ?selected="${this._selectedTreatment === option}">${option}</option>`
+                                                )}
+                                            </select>
+                                            <button
+                                                @click="${this._removeCustomTreatment}"
+                                                ?disabled="${!this._selectedTreatment}"
+                                                class="treatment-btn remove-btn"
+                                            >
+                                                - Entfernen
+                                            </button>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+
                             <ha-icon-button
                                 @click="${this._close}"
                                 .label=${"Schließen"}
