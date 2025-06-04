@@ -462,7 +462,6 @@ export class FlowerGallery extends LitElement {
         try {
             // Verwende PlantEntityUtils, um die Pflanzen-Info zu holen
             this._plantInfo = await PlantEntityUtils.getPlantInfo(this.hass, this.entityId);
-            console.log('[GALLERY] Loaded plant info:', this._plantInfo);
             // Lade die Bilder, nachdem die Pflanzeninfo geladen ist
             await this._initGallery();
         } catch (err) {
@@ -674,23 +673,16 @@ export class FlowerGallery extends LitElement {
 
     private async _loadTreatmentHistory(): Promise<void> {
         if (!this.entityId || !this.hass || !this._plantInfo) {
-            console.log('[GALLERY] Treatment loading skipped - missing requirements:', {
-                entityId: !!this.entityId,
-                hass: !!this.hass,
-                plantInfo: !!this._plantInfo
-            });
             return;
         }
 
         // Hole die treatment Entity-ID aus der plantInfo
         if (!this._plantInfo?.helpers?.treatment?.entity_id) {
-            console.log('[GALLERY] No treatment entity found in plantInfo:', this._plantInfo?.helpers);
             this._treatmentHistory = [];
             return;
         }
 
         const treatmentEntityId = this._plantInfo.helpers.treatment.entity_id;
-        console.log('[GALLERY] Loading treatment history for entity:', treatmentEntityId);
 
         try {
             // Bestimme den Zeitraum für die Historie (vom ersten Bild bis jetzt)
@@ -707,7 +699,6 @@ export class FlowerGallery extends LitElement {
             if (response && Array.isArray(response) && response.length > 0) {
                 const history = response[0];
                 this._treatmentHistory = [];
-                console.log('[GALLERY] Treatment history response:', history);
 
                 for (let i = 0; i < history.length; i++) {
                     const state = history[i];
@@ -725,9 +716,15 @@ export class FlowerGallery extends LitElement {
 
                 // Sortiere nach Datum (neueste zuerst)
                 this._treatmentHistory.sort((a, b) => b.date.getTime() - a.date.getTime());
-                console.log('[GALLERY] Loaded treatment history:', this._treatmentHistory);
+
+                // Debug: Zeige nur die erste Behandlung und Anzahl
+                if (this._treatmentHistory.length > 0) {
+                    console.log('[GALLERY] Loaded', this._treatmentHistory.length, 'treatments. Latest:', {
+                        date: this._treatmentHistory[0].date.toISOString(),
+                        treatment: this._treatmentHistory[0].treatment
+                    });
+                }
             } else {
-                console.log('[GALLERY] No treatment history found in response:', response);
                 this._treatmentHistory = [];
             }
         } catch (error) {
@@ -738,20 +735,23 @@ export class FlowerGallery extends LitElement {
 
     private _getTreatmentForImageDate(imageDate: Date): string {
         if (!this._treatmentHistory || this._treatmentHistory.length === 0) {
-            console.log('[GALLERY] No treatment history available for date:', imageDate);
             return '';
         }
 
         // Finde das neueste Treatment vor oder am Bilddatum
-        for (const treatment of this._treatmentHistory) {
+        // Sortiere die Behandlungen nach Datum (älteste zuerst) für korrekte Suche
+        const sortedTreatments = [...this._treatmentHistory].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+        let lastValidTreatment = '';
+        for (const treatment of sortedTreatments) {
             if (treatment.date <= imageDate) {
-                console.log('[GALLERY] Found treatment for image date:', imageDate, 'treatment:', treatment.treatment);
-                return treatment.treatment;
+                lastValidTreatment = treatment.treatment;
+            } else {
+                break; // Stoppe, wenn wir ein Datum nach dem Bilddatum erreichen
             }
         }
 
-        console.log('[GALLERY] No treatment found for image date:', imageDate);
-        return '';
+        return lastValidTreatment;
     }
 
     private _getGroupedImages(): Array<{phase: string, images: Array<{url: string, day: number, totalDays: number, treatment?: string}>, color: string}> {
@@ -959,6 +959,15 @@ export class FlowerGallery extends LitElement {
 
         // Hole Treatment-Information für das Bilddatum
         const treatmentAtImage = this._getTreatmentForImageDate(imageDate);
+
+        // Debug: Zeige nur für das erste Bild die Datumsinformationen
+        if (this.images.indexOf(url) === 0 && this._treatmentHistory.length > 0) {
+            console.log('[GALLERY] Date comparison debug:', {
+                imageDate: imageDate.toISOString(),
+                latestTreatment: this._treatmentHistory[0].date.toISOString(),
+                treatmentFound: treatmentAtImage
+            });
+        }
 
         // Prüfe ob es das erste Bild (entity_picture) ist
         if (this.images.indexOf(url) === 0) {
