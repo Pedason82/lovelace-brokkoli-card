@@ -746,7 +746,7 @@ export class FlowerHistory extends LitElement {
     
     private _getLabelForAction(action: string | null): string {
         if (!action) return '';
-        
+
         switch (action) {
             case ADD_ACTIONS.PHASE:
                 return 'Wachstumsphase';
@@ -761,6 +761,28 @@ export class FlowerHistory extends LitElement {
             default:
                 return '';
         }
+    }
+
+    /**
+     * Get dynamic treatment options from the treatment select entity
+     */
+    private _getTreatmentOptions(): string[] {
+        if (!this.entityId || !this.hass) {
+            // Fallback to hardcoded options if no entity or hass available
+            return ['cut', 'super cropping', 'topping', 'lollipop', 'fim', 'rib', 'spray pest', 'spray water'];
+        }
+
+        // Find the treatment select entity for this plant
+        const treatmentEntityId = `select.${this.entityId.split('.')[1]}_treatment`;
+        const treatmentEntity = this.hass.states[treatmentEntityId];
+
+        if (treatmentEntity && treatmentEntity.attributes && treatmentEntity.attributes.options) {
+            // Return dynamic options from the backend entity (excluding empty option)
+            return treatmentEntity.attributes.options.filter((option: string) => option !== '');
+        }
+
+        // Fallback to hardcoded options if entity not found or no options available
+        return ['cut', 'super cropping', 'topping', 'lollipop', 'fim', 'rib', 'spray pest', 'spray water'];
     }
     
     private _renderFormForAction(action: string | null): TemplateResult {
@@ -860,21 +882,19 @@ export class FlowerHistory extends LitElement {
                 `;
                 
             case ADD_ACTIONS.TREATMENT:
+                // Get dynamic treatment options from the treatment select entity
+                const treatmentOptions = this._getTreatmentOptions();
+
                 return html`
                     <div class="form-field">
-                        <select id="treatment-select" 
+                        <select id="treatment-select"
                             @click=${handleClick}
                             @change=${handleSelectChange}
                         >
                             <option value="" disabled selected>Bitte wählen...</option>
-                            <option value="cut">cut</option>
-                            <option value="super cropping">super cropping</option>
-                            <option value="topping">topping</option>
-                            <option value="lollipop">lollipop</option>
-                            <option value="fim">fim</option>
-                            <option value="rib">rib</option>
-                            <option value="spray pest">spray pest</option>
-                            <option value="spray water">spray water</option>
+                            ${treatmentOptions.map(option =>
+                                option ? html`<option value="${option}">${option}</option>` : ''
+                            )}
                         </select>
                     </div>
                 `;
