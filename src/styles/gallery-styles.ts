@@ -115,8 +115,8 @@ export const galleryStyles = css`
     }
 
     .gallery-image {
-        max-width: 120%;
-        max-height: 120%;
+        max-width: 150%;
+        max-height: 150%;
         object-fit: contain;
         opacity: 1;
         transition: opacity 0.5s ease-in-out;
