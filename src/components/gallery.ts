@@ -736,20 +736,20 @@ export class FlowerGallery extends LitElement {
             return '';
         }
 
-        // Finde das neueste Treatment vor oder am Bilddatum
-        // Sortiere die Behandlungen nach Datum (älteste zuerst) für korrekte Suche
-        const sortedTreatments = [...this._treatmentHistory].sort((a, b) => a.date.getTime() - b.date.getTime());
+        // 10-Minuten-Fenster: Zeige Treatment nur wenn Bild innerhalb 10 Minuten nach Behandlung aufgenommen wurde
+        const tenMinutesInMs = 10 * 60 * 1000; // 10 Minuten in Millisekunden
 
-        let lastValidTreatment = '';
-        for (const treatment of sortedTreatments) {
-            if (treatment.date <= imageDate) {
-                lastValidTreatment = treatment.treatment;
-            } else {
-                break; // Stoppe, wenn wir ein Datum nach dem Bilddatum erreichen
+        // Finde Treatments, die innerhalb 10 Minuten vor dem Bilddatum angewendet wurden
+        for (const treatment of this._treatmentHistory) {
+            const timeDifference = imageDate.getTime() - treatment.date.getTime();
+
+            // Prüfe ob das Bild zwischen 0 und 10 Minuten nach der Behandlung aufgenommen wurde
+            if (timeDifference >= 0 && timeDifference <= tenMinutesInMs) {
+                return treatment.treatment;
             }
         }
 
-        return lastValidTreatment;
+        return ''; // Kein Treatment innerhalb des 10-Minuten-Fensters
     }
 
     private _getGroupedImages(): Array<{phase: string, images: Array<{url: string, day: number, totalDays: number, treatment?: string}>, color: string}> {
