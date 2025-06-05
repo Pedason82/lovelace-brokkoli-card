@@ -24,6 +24,7 @@ export class FlowerGallery extends LitElement {
     @state() private _thumbnailUrls = new Map<string, string>();
     @state() private _galleryImageUrls = new Map<string, string>();
     @state() private _customTreatmentName = '';
+    @state() private _customTreatmentColor = 'orange';
     @state() private _selectedTreatment = '';
     @state() private _applyTreatment = '';
     private _imageRotationInterval?: NodeJS.Timeout;
@@ -966,7 +967,8 @@ export class FlowerGallery extends LitElement {
             let info = `<div class="date-line">${dateStr}</div>`;
             info += `<div class="info-line">Tag 1 <span class="phase">${phaseAtImage}</span>/1 Total</div>`;
             if (treatmentAtImage) {
-                info += `<div class="info-line"><span class="treatment">${treatmentAtImage}</span></div>`;
+                const treatmentColor = this._getTreatmentColor(treatmentAtImage);
+                info += `<div class="info-line"><span class="treatment" data-color="${treatmentColor}">${treatmentAtImage}</span></div>`;
             }
             return info;
         }
@@ -975,7 +977,8 @@ export class FlowerGallery extends LitElement {
         let info = `<div class="date-line">${dateStr}</div>`;
         info += `<div class="info-line">Tag ${daysInPhase + 1} <span class="phase">${phaseAtImage}</span>/${totalAge + 1} Total</div>`;
         if (treatmentAtImage) {
-            info += `<div class="info-line"><span class="treatment">${treatmentAtImage}</span></div>`;
+            const treatmentColor = this._getTreatmentColor(treatmentAtImage);
+            info += `<div class="info-line"><span class="treatment" data-color="${treatmentColor}">${treatmentAtImage}</span></div>`;
         }
 
         return info;
@@ -1000,6 +1003,30 @@ export class FlowerGallery extends LitElement {
         return ['cut', 'super cropping', 'topping', 'lollipop', 'fim', 'rib', 'spray pest', 'spray water'];
     }
 
+    private _getTreatmentColor(treatmentName: string): string {
+        if (!this.entityId || !this.hass || !treatmentName) {
+            return 'orange'; // Default color
+        }
+
+        // Find the treatment select entity for this plant
+        const treatmentEntityId = `select.${this.entityId.split('.')[1]}_treatment`;
+        const treatmentEntity = this.hass.states[treatmentEntityId];
+
+        if (treatmentEntity && treatmentEntity.attributes && treatmentEntity.attributes.custom_treatments) {
+            const customTreatments = treatmentEntity.attributes.custom_treatments;
+
+            // Find the treatment in custom treatments
+            for (const treatment of customTreatments) {
+                if (typeof treatment === 'object' && treatment.name === treatmentName) {
+                    return treatment.color || 'orange';
+                }
+            }
+        }
+
+        // Default color for built-in treatments or if not found
+        return 'orange';
+    }
+
     private _toggleTreatmentPanel(e: Event) {
         e.preventDefault();
         e.stopPropagation();
@@ -1010,6 +1037,12 @@ export class FlowerGallery extends LitElement {
     private _handleCustomTreatmentInput(e: Event) {
         const input = e.target as HTMLInputElement;
         this._customTreatmentName = input.value;
+        this.requestUpdate();
+    }
+
+    private _handleCustomTreatmentColorSelect(e: Event) {
+        const select = e.target as HTMLSelectElement;
+        this._customTreatmentColor = select.value;
         this.requestUpdate();
     }
 
@@ -1036,10 +1069,12 @@ export class FlowerGallery extends LitElement {
         try {
             await this.hass.callService('plant', 'add_custom_treatment', {
                 entity_id: this.entityId,
-                treatment_name: treatmentName
+                treatment_name: treatmentName,
+                treatment_color: this._customTreatmentColor
             });
 
             this._customTreatmentName = '';
+            this._customTreatmentColor = 'orange'; // Reset to default
             this.requestUpdate();
         } catch (error) {
             console.error('Error adding treatment:', error);
@@ -1232,6 +1267,17 @@ export class FlowerGallery extends LitElement {
                                                 placeholder="Behandlungsname eingeben..."
                                                 class="treatment-input"
                                             >
+                                            <select
+                                                @change="${this._handleCustomTreatmentColorSelect}"
+                                                .value="${this._customTreatmentColor}"
+                                                class="treatment-select color-picker"
+                                            >
+                                                <option value="orange">🟠 Orange</option>
+                                                <option value="green">🟢 Grün</option>
+                                                <option value="blue">🔵 Blau</option>
+                                                <option value="red">🔴 Rot</option>
+                                                <option value="yellow">🟡 Gelb</option>
+                                            </select>
                                             <button
                                                 @click="${this._addCustomTreatment}"
                                                 ?disabled="${!this._customTreatmentName.trim()}"
@@ -1330,7 +1376,7 @@ export class FlowerGallery extends LitElement {
                                                      @click="${() => this._selectImage(this.images.indexOf(image.url))}">
                                                     <div class="thumbnail-day">
                                                         Tag ${image.day}/${image.totalDays}
-                                                        ${image.treatment ? html`<br><span class="thumbnail-treatment">${image.treatment}</span>` : ''}
+                                                        ${image.treatment ? html`<br><span class="thumbnail-treatment" data-color="${this._getTreatmentColor(image.treatment)}">${image.treatment}</span>` : ''}
                                                     </div>
                                                     <img class="thumbnail" src="${this._thumbnailUrls.get(image.url) || image.url}">
                                                 </div>

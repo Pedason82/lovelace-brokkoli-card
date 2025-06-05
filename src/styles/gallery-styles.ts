@@ -1,6 +1,15 @@
 import { css } from 'lit';
 
 export const galleryStyles = css`
+    /* Treatment Color Variables */
+    :host {
+        --treatment-orange-color: #ff9800;
+        --treatment-green-color: #4caf50;
+        --treatment-blue-color: #2196f3;
+        --treatment-red-color: #f44336;
+        --treatment-yellow-color: #ffeb3b;
+    }
+
     .gallery-overlay {
         position: fixed;
         top: 0;
@@ -65,9 +74,15 @@ export const galleryStyles = css`
 
     .gallery-date .treatment {
         font-weight: bold;
-        color: var(--accent-color, #ff9800);
         font-style: italic;
     }
+
+    /* Dynamic treatment colors */
+    .gallery-date .treatment[data-color="orange"] { color: var(--treatment-orange-color); }
+    .gallery-date .treatment[data-color="green"] { color: var(--treatment-green-color); }
+    .gallery-date .treatment[data-color="blue"] { color: var(--treatment-blue-color); }
+    .gallery-date .treatment[data-color="red"] { color: var(--treatment-red-color); }
+    .gallery-date .treatment[data-color="yellow"] { color: var(--treatment-yellow-color); }
 
     .gallery-date .bracket {
         font-weight: normal;
@@ -247,10 +262,16 @@ export const galleryStyles = css`
 
     .thumbnail-treatment {
         font-size: 0.7em;
-        color: var(--accent-color, #ff9800);
         font-style: italic;
         font-weight: bold;
     }
+
+    /* Dynamic thumbnail treatment colors */
+    .thumbnail-treatment[data-color="orange"] { color: var(--treatment-orange-color); }
+    .thumbnail-treatment[data-color="green"] { color: var(--treatment-green-color); }
+    .thumbnail-treatment[data-color="blue"] { color: var(--treatment-blue-color); }
+    .thumbnail-treatment[data-color="red"] { color: var(--treatment-red-color); }
+    .thumbnail-treatment[data-color="yellow"] { color: var(--treatment-yellow-color); }
 
     /* Treatment Management Styles */
     .treatment-container {
@@ -363,6 +384,11 @@ export const galleryStyles = css`
     .treatment-btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+    }
+
+    .color-picker {
+        margin-top: 8px;
+        font-family: inherit;
     }
 
     .thumbnail-container:hover {
